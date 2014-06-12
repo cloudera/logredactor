@@ -18,18 +18,77 @@
 package com.cloudera.log4j.redactor;
 
 import org.apache.log4j.Logger;
+import org.junit.After;
+import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 
+import java.io.ByteArrayOutputStream;
+import java.io.FilterOutputStream;
+import java.io.OutputStream;
+import java.io.PrintStream;
+
 public class TestRedaction {
+  private PrintStream originalOut;
+  private ByteArrayOutputStream memOut;
+  private FilterOut filterOut;
+  private PrintStream capturedStdOut;
+
+  private static class FilterOut extends FilterOutputStream {
+    public FilterOut(OutputStream out) {
+      super(out);
+    }
+
+    public void setOutputStream(OutputStream out) {
+      this.out = out;
+    }
+  }
+  @Before
+  public void setUp() {
+    originalOut = System.err;
+    memOut = new ByteArrayOutputStream();
+    filterOut = new FilterOut(memOut);
+    capturedStdOut = new PrintStream(filterOut);
+    System.setErr(capturedStdOut);
+  }
+
+  @After
+  public void cleanUp() {
+    System.setErr(originalOut);
+  }
+
+  private String getAndResetLogOutput() {
+    capturedStdOut.flush();
+    String logOutput = new String(memOut.toByteArray());
+    memOut = new ByteArrayOutputStream();
+    filterOut.setOutputStream(memOut);
+    return logOutput;
+  }
 
   @Test
   public void testRedaction() {
     // System.setProperty("log4j.debug", "true");
     Logger log = Logger.getLogger(TestRedaction.class);
+
     log.info("WHERE x=123-45-6789");
-    log.info("WHERE x=1234-1234-1234-1234 OR y=1234-1234-1234-1234 OR y=123-45-6789");
-    log.info("xgz ABC pepe");
-    log.info("password=\"pepe pepe\"");
+    String out = getAndResetLogOutput();
+    Assert.assertEquals("WHERE x=XXX-XX-XXXX", out);
+
+    log.info("WHERE x=123-45-6789 or y=000-00-0000");
+    out = getAndResetLogOutput();
+    Assert.assertEquals("WHERE x=XXX-XX-XXXX or y=XXX-XX-XXXX", out);
+
+    log.info("x=1234-1234-1234-1234 or y=000-00-0000");
+    out = getAndResetLogOutput();
+    Assert.assertEquals("x=1234-1234-1234-1234 or y=000-00-0000", out);
+
+    log.info("xxx password=\"hi\"");
+    out = getAndResetLogOutput();
+    Assert.assertEquals("xxx password=\"?????\"", out);
+
+    log.info("blah blah ABC Blah");
+    out = getAndResetLogOutput();
+    Assert.assertEquals("blah blah ??? Blah", out);
   }
 
 }

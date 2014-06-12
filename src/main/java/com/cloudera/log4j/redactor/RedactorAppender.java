@@ -44,16 +44,16 @@ import java.util.Enumeration;
  * [APPENDERS] should be the list of appenders, comma separated, to wrap for
  * redaction.
  * <p/>
- * All the appenders listed in [APPENDERS] must be added for the rootLogger.
+ * All the appenders listed in [APPENDERS] must be added to the rootLogger.
  * <p/>
- * The <b>redactor</b> appender must also be added as the last appender of the to
- * the rootLogger.
+ * The <code>redactor</code> appender itself must also be to the rootLogger as
+ * the last appender.
  * <p/>
  * [RULES] are a list of [TRIGGER]::[REGEX]::[REDACTION_MASK] separated by '||'
  * <p/>
- * If the log message contains the [TRIGGER], starting from that point the
- * [REGEX] will be searched and all ocurrences will be replaced with the
- * [REDACTION_MASK]
+ * If the log message contains the [TRIGGER], starting from the [TRIGGER]
+ * position in the log message, the [REGEX] will be searched and all occurrences
+ * will be replaced with the [REDACTION_MASK].
  * <p/>
  * All rules for which the [TRIGGER] is found will be applied.
  */
