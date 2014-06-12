@@ -3,7 +3,7 @@ Log Redactor
 Log4j Appender that redacts log messages using redaction rules
 before delegating to other Appenders.
 
-How to use:
+INSTALL AND CONFIGURATION:
 
 Install the Log Redactor JAR file in the classpath.
 
@@ -19,6 +19,9 @@ redaction. All these appenders must be added to the rootLogger.
 
 The redactor appender itself must also be to the rootLogger as the last
 appender.
+
+(NOTE: refer to the bottom of this file for details on how)
+(      to use appenders not associated with the rootLogger)
 
 [RULES] are a list of [TRIGGER]::[REGEX]::[REDACTION_MASK] separated by '||'
 
@@ -56,3 +59,46 @@ This example has 3 rules. The first one is triggered when 'password=' is found
 and it replaces the password value (assumed between double quotes) with ?????.
 The second and third rule are applied to all log messages, redacting credit
 card numbers and SSN numbers.
+
+USING REDACTOR APPENDERS IN MULTIPLE LOGGERS:
+
+Due to the mechanism Log4J loads log4j.properties, a RedactorAppender can be
+used only in one logger (typically the rootLogger).
+
+In case that a RedactorAppender is to be used in multiple loggers, each logger
+will have to use its own redactor definition.
+
+For example:
+
+----
+# LOG Appender
+log4j.appender.LOG=org.apache.log4j.ConsoleAppender
+log4j.appender.LOG.Target=System.out
+log4j.appender.LOG.layout=org.apache.log4j.PatternLayout
+log4j.appender.LOG.layout.ConversionPattern=LOG %m%n
+log4j.appender.X=org.apache.log4j.ConsoleAppender
+log4j.appender.X.Target=System.err
+log4j.appender.X.layout=org.apache.log4j.PatternLayout
+log4j.appender.X.layout.ConversionPattern=X   %m%n
+
+log4j.appender.redactor=com.cloudera.log4j.redactor.RedactorAppender
+log4j.appender.redactor.appenderRefs=LOG,X
+log4j.appender.redactor.policy=com.cloudera.log4j.redactor.RedactorPolicy
+log4j.appender.redactor.policy.rules=\
+WHERE::\\d\\d\\d\\d-\\d\\d\\d\\d-\\d\\d\\d\\d-\\d\\d\\d\\d::XXXX-XXXX-XXXX-XXXX||\
+WHERE::\\d\\d\\d-\\d\\d-\\d\\d\\d\\d::XXX-XX-XXXX||\
+password=::password=\\".*\\"::password=\"?????\"||\
+::ABC::???
+
+log4j.appender.Xredactor=com.cloudera.log4j.redactor.RedactorAppender
+log4j.appender.Xredactor.appenderRefs=LOG,X
+log4j.appender.Xredactor.policy=com.cloudera.log4j.redactor.RedactorPolicy
+log4j.appender.Xredactor.policy.rules=\
+WHERE::\\d\\d\\d\\d-\\d\\d\\d\\d-\\d\\d\\d\\d-\\d\\d\\d\\d::XXXX-XXXX-XXXX-XXXX||\
+WHERE::\\d\\d\\d-\\d\\d-\\d\\d\\d\\d::XXX-XX-XXXX||\
+password=::password=\\".*\\"::password=\"?????\"||\
+::ABC::???
+
+log4j.rootLogger=ALL, LOG, redactor
+log4j.logger.com.cloudera=ALL, X, Xredactor
+----
