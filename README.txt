@@ -3,6 +3,10 @@ Log Redactor
 Log4j Appender that redacts log messages using redaction rules
 before delegating to other Appenders.
 
+All its configuration is in the log4j.properties file, because this
+file is hot-reloaded by most services, it means the redactor can be
+hot-reconfigured (i.e. adding additional redaction rules).
+
 INSTALL AND CONFIGURATION:
 
 Install the Log Redactor JAR file in the classpath.
