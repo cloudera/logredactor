@@ -70,7 +70,8 @@ public class RedactorPolicy implements RewritePolicy, OptionHandler {
         protected Map<String, List<MatcherReplacement>> initialValue() {
           Map<String, List<MatcherReplacement>> matcherMap
               = new HashMap<String, List<MatcherReplacement>>();
-          for (Map.Entry<String, List<PatternReplacement>> entry : prMap.entrySet()) {
+          for (Map.Entry<String, List<PatternReplacement>> entry 
+              : prMap.entrySet()) {
             List<MatcherReplacement> list = new ArrayList<MatcherReplacement>();
             matcherMap.put(entry.getKey(), list);
             for (PatternReplacement pr : entry.getValue()) {
@@ -90,8 +91,16 @@ public class RedactorPolicy implements RewritePolicy, OptionHandler {
 
   @Override
   public void activateOptions() {
-    for (String rules : this.rules) {
-      String[] kv = rules.trim().split("::", 3);
+    for (String rule : this.rules) {
+      String[] kv = rule.trim().split("::", 3);
+      if (kv.length != 3) {
+        throw new IllegalArgumentException(
+            "Invalid rule, it should have 3 parts: " + rule);
+      }
+      if (kv[1].length() == 0) {
+        throw new IllegalArgumentException(
+            "Invalid rule, regex cannot be empty: " + rule);
+      }
       List<PatternReplacement> list = prMap.get(kv[0]);
       if (list == null) {
         list = new ArrayList<PatternReplacement>();
@@ -101,15 +110,21 @@ public class RedactorPolicy implements RewritePolicy, OptionHandler {
     }
   }
 
+  private boolean hasTrigger(String trigger, String msg) {
+    //TODO use Boyer-More to make it more efficient
+    //TODO http://www.cs.utexas.edu/users/moore/publications/fstrpos.pdf
+    return msg.contains(trigger);
+  }
+  
   private String redact(String msg) {
     boolean matched = false;
-    for (Map.Entry<String, List<MatcherReplacement>> entry : mrTL.get().entrySet()) {
+    for (Map.Entry<String, List<MatcherReplacement>> entry 
+        : mrTL.get().entrySet()) {
+      String key = entry.getKey();
       for (MatcherReplacement mr : entry.getValue()) {
-        String key = entry.getKey();
-        int index = msg.indexOf(key);
-        if (index >= 0) {
+        if (hasTrigger(key, msg)) {
           mr.matcher.reset(msg);
-          if (mr.matcher.find(index)) {
+          if (mr.matcher.find()) {
             msg = mr.matcher.replaceAll(mr.replacement);
             matched = true;
           }

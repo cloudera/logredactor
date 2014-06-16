@@ -21,7 +21,7 @@ Edit the log4j.properties file adding the following appender definition:
 [APPENDERS] should be the list of appenders, comma separated, to wrap for
 redaction. All these appenders must be added to the rootLogger.
 
-The redactor appender itself must also be to the rootLogger as the last
+The redactor appender itself must be added to the rootLogger as the last
 appender.
 
 (NOTE: refer to the bottom of this file for details on how)

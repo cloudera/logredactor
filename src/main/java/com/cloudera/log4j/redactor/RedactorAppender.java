@@ -46,7 +46,7 @@ import java.util.Enumeration;
  * <p/>
  * All the appenders listed in [APPENDERS] must be added to the rootLogger.
  * <p/>
- * The <code>redactor</code> appender itself must also be to the rootLogger as
+ * The <code>redactor</code> appender itself must be added to the rootLogger as
  * the last appender.
  * <p/>
  * [RULES] are a list of [TRIGGER]::[REGEX]::[REDACTION_MASK] separated by '||'

@@ -17,7 +17,9 @@
  */
 package com.cloudera.log4j.redactor;
 
+import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
+import org.apache.log4j.PropertyConfigurator;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -28,11 +30,11 @@ import java.io.FilterOutputStream;
 import java.io.OutputStream;
 import java.io.PrintStream;
 
-public class TestRedaction {
+public class TestRedactionPositive {
   private PrintStream originalOut;
   private ByteArrayOutputStream memOut;
   private FilterOut filterOut;
-  private PrintStream capturedStdOut;
+  private PrintStream capturedOut;
 
   private static class FilterOut extends FilterOutputStream {
     public FilterOut(OutputStream out) {
@@ -43,22 +45,26 @@ public class TestRedaction {
       this.out = out;
     }
   }
+  
   @Before
   public void setUp() {
     originalOut = System.err;
     memOut = new ByteArrayOutputStream();
     filterOut = new FilterOut(memOut);
-    capturedStdOut = new PrintStream(filterOut);
-    System.setErr(capturedStdOut);
+    capturedOut = new PrintStream(filterOut);
+    System.setErr(capturedOut);
+    PropertyConfigurator.configure(Thread.currentThread().
+        getContextClassLoader().getResourceAsStream("log4j-positive.properties"));
   }
 
   @After
   public void cleanUp() {
     System.setErr(originalOut);
+    LogManager.resetConfiguration();
   }
 
   private String getAndResetLogOutput() {
-    capturedStdOut.flush();
+    capturedOut.flush();
     String logOutput = new String(memOut.toByteArray());
     memOut = new ByteArrayOutputStream();
     filterOut.setOutputStream(memOut);
@@ -67,12 +73,15 @@ public class TestRedaction {
 
   @Test
   public void testRedaction() {
-    // System.setProperty("log4j.debug", "true");
-    Logger log = Logger.getLogger(TestRedaction.class);
+    Logger log = Logger.getLogger(TestRedactionPositive.class);
 
     log.info("WHERE x=123-45-6789");
     String out = getAndResetLogOutput();
     Assert.assertEquals("WHERE x=XXX-XX-XXXX", out);
+
+    log.info("x=123-45-6789 WHERE");
+    out = getAndResetLogOutput();
+    Assert.assertEquals("x=XXX-XX-XXXX WHERE", out);
 
     log.info("WHERE x=123-45-6789 or y=000-00-0000");
     out = getAndResetLogOutput();
