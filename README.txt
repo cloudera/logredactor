@@ -27,14 +27,17 @@ appender.
 (NOTE: refer to the bottom of this file for details on how)
 (      to use appenders not associated with the rootLogger)
 
-[RULES] are a list of [TRIGGER]::[REGEX]::[REDACTION_MASK] separated by '||'
+[RULES] are a list of [TRIGGER]::[REGEX]::[REDACTION_MASK] triplets.  The
+rules can either be specified either
+  1) inline in one long string in .policy.rules, separated by '||'
+  2) in a file, each rule on one line, and the full path to the file
+     given in .policy.rules.
 
-If the log message contains the [TRIGGER], starting from the [TRIGGER] position
-in the log message, the [REGEX] will be searched and all occurrences will be
-replaced with the [REDACTION_MASK].
+If the log message contains the [TRIGGER], the [REGEX] will be searched
+and all occurrences will be replaced with the [REDACTION_MASK].
 
-All rules for which the [TRIGGER] is found will be applied. If the [TRIGGER] is
-empty, the rule will be applied to all log messages.
+All rules for which the [TRIGGER] is found will be applied. If the [TRIGGER]
+is empty, the rule will be applied to all log messages.
 
 IMPORTANT: [REGEX] are Java regular expressions. Make sure escaping of \ is
 properly done.
