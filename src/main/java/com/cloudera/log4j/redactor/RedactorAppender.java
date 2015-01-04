@@ -49,11 +49,16 @@ import java.util.Enumeration;
  * The <code>redactor</code> appender itself must be added to the rootLogger as
  * the last appender.
  * <p/>
- * [RULES] are a list of [TRIGGER]::[REGEX]::[REDACTION_MASK] separated by '||'
+ * [RULES] are either
+ * <ol>
+ *   <li>One big string containing a list of
+ *       [TRIGGER]::[REGEX]::[REDACTION_MASK] separated by '||', or</li>
+ *   <li>A full path to a file (starts with '/'). This file must contain a
+ *       [TRIGGER]::[REGEX]::[REDACTION_MASK] triple on each line.</li>
+ * </ol>
  * <p/>
- * If the log message contains the [TRIGGER], starting from the [TRIGGER]
- * position in the log message, the [REGEX] will be searched and all occurrences
- * will be replaced with the [REDACTION_MASK].
+ * If the log message contains the [TRIGGER], the message will be searched
+ * for [REGEX] and all occurrences will be replaced with the [REDACTION_MASK].
  * <p/>
  * All rules for which the [TRIGGER] is found will be applied.
  */
@@ -62,12 +67,26 @@ public class RedactorAppender extends RewriteAppender {
   private String[] appenders;
 
   /**
-   * Log4j configurator uses this method to set the policy
+   * Log4j configurator calls this with the contents found in the config file.
    */
   public void setPolicy(RedactorPolicy policy) {
     this.policy = policy;
   }
 
+  /**
+   * Log4j configurator calls this with the contents found in the config file.
+   */
+  public void setAppenderRefs(String appenderRefs) {
+    this.appenders = appenderRefs.split(",");
+  }
+
+  /**
+   * For each of the given appenders that are attached to the given logger,
+   * place a RedactorAppender "in front of" the real appender so that it can
+   * do redaction magic.
+   * @param logger The logger to operate on.
+   * @param appenders The appenders to wrap.
+   */
   private void wrapAppender(Logger logger, String[] appenders) {
     for (String appenderName : appenders) {
       appenderName = appenderName.trim();
@@ -85,12 +104,10 @@ public class RedactorAppender extends RewriteAppender {
   }
 
   /**
-   * Log4j configurator uses this method to set the appenders to redact
+   * Called after all options are read in so that they can be acted on
+   * at one time. Here we wrap all the necessary appenders with
+   * RedactorAppender()s.
    */
-  public void setAppenderRefs(String appenderRefs) {
-    appenders = appenderRefs.split(",");
-  }
-
   @Override
   public void activateOptions() {
     super.activateOptions();

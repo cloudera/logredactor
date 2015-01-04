@@ -34,7 +34,8 @@ public class RedactorPolicy implements RewritePolicy, OptionHandler {
   private StringRedactor redactor;
 
   /**
-   * Log4j configurator uses this method to set the defined
+   * Log4j configurator calls this method with the value found in the
+   * config file.
    */
   public void setRules(String rules) {
     this.rules = rules;
@@ -48,7 +49,7 @@ public class RedactorPolicy implements RewritePolicy, OptionHandler {
    */
   @Override
   public void activateOptions() {
-    if (rules.startsWith("/")) {
+    if (rules.startsWith("/")) {  // assumed to be filename
       redactor = StringRedactor.createFromFile(rules);
     } else {
       redactor = StringRedactor.createFromString(rules);

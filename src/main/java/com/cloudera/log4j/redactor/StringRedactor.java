@@ -29,7 +29,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * Words.
+ * This class contains the logic for redacting Strings.
  */
 public class StringRedactor {
 
@@ -78,32 +78,17 @@ public class StringRedactor {
           };
 
   /**
-   * Puts the rule components into the redaction map.  The map is keyed
-   * on trigger, and elements are a list of PatternReplacements
-   *
-   * @param trigger If present, keyword that turns on regex+mask
-   * @param regex Regex to match line
-   * @param mask What to replace the matched characters with
-   */
-  private static void insertRuleIntoPrMap (StringRedactor sr,
-                                           String trigger, String regex, String mask) {
-    List<PatternReplacement> list = sr.prMap.get(trigger);
-    if (list == null) {
-      list = new ArrayList<PatternReplacement>();
-      sr.prMap.put(trigger, list);
-    }
-    list.add(new PatternReplacement(regex, mask));
-  }
-
-  /**
    * Given one rule in (hopefully) trigger::regex::mask form, parse it
    * and throw errors if needed.
+   * @param sr The StringRedactor to parse the rule into
    * @param rule The line to parse
-   * @param file The file from whence it came (if directly in properties file, null)
+   * @param file The file from whence it came (or if no file, null)
    * @param lineNo The line in file, if file is non-null.
+   * @throws IllegalArgumentException
    */
   private static void parseOneRule(StringRedactor sr, String rule,
-                                   String file, int lineNo) {
+                                   String file, int lineNo)
+          throws IllegalArgumentException {
     String[] ruleTriple = rule.trim().split("::", 3);
     String where = "";
     if (file != null) {
@@ -113,16 +98,33 @@ public class StringRedactor {
       throw new IllegalArgumentException(
               "Invalid rule" + where + ", it should have 3 parts: " + rule);
     }
-    if (ruleTriple[1].length() == 0) {
+    String trigger = ruleTriple[0];
+    String regex = ruleTriple[1];
+    String mask = ruleTriple[2];
+
+    if (regex.length() == 0) {
       throw new IllegalArgumentException(
               "Invalid rule" + where + ", regex cannot be empty: " + rule);
     }
-    insertRuleIntoPrMap(sr, ruleTriple[0], ruleTriple[1], ruleTriple[2]);
+    List<PatternReplacement> list = sr.prMap.get(trigger);
+    if (list == null) {
+      list = new ArrayList<PatternReplacement>();
+      sr.prMap.put(trigger, list);
+    }
+    list.add(new PatternReplacement(regex, mask));
   }
 
-
+  /** Private constructor to prevent external instantiation */
   private StringRedactor() {}
 
+  /**
+   * Create a StringRedactor based on the rules in a file.  The file is
+   * expected to have one rule per line, where each rule is in the form
+   * trigger::regex::mask.  See the README for further details.
+   * @param filename The file containing rules for redaction.
+   * @return A new instance of a StringRedactor.
+   * @throws IllegalArgumentException
+   */
   public static StringRedactor createFromFile (String filename)
           throws IllegalArgumentException {
     StringRedactor sr = new StringRedactor();
@@ -131,9 +133,8 @@ public class StringRedactor {
       BufferedReader in = new BufferedReader(new FileReader(filename));
       try {
         String line;
-        // One rule per line
         while ((line = in.readLine()) != null) {
-          parseOneRule(sr, line, filename, lineNo);
+          parseOneRule(sr, line.trim(), filename, lineNo);
           lineNo++;
         }
       } finally {
@@ -142,17 +143,24 @@ public class StringRedactor {
     } catch (FileNotFoundException e) {
       throw new IllegalArgumentException("Invalid path in rule", e);
     } catch (IOException e) {
-      throw new IllegalArgumentException("Bad input in rule file at line " + lineNo, e);
+      throw new IllegalArgumentException("Bad input in rule file at line " +
+              lineNo, e);
     }
     return sr;
   }
 
+  /**
+   * Create a StringRedactor based on the rules contained on one line. Each
+   * rule in the line is separated by ||. The rules themselves are in the
+   * form trigger::regex::mask.  See the README for further details.
+   * @param rules A || separated list of rules.
+   * @return A new instance of a StringRedactor.
+   * @throws IllegalArgumentException
+   */
   public static StringRedactor createFromString (String rules)
           throws IllegalArgumentException {
     StringRedactor sr = new StringRedactor();
-    // Outer split on || for each rule
     for (String rule : rules.trim().split("\\|\\|")) {
-      // Per-rule split on trigger::regex::mask
       parseOneRule(sr, rule, null, 0);
     }
     return sr;
@@ -166,8 +174,9 @@ public class StringRedactor {
 
   /**
    * The actual redaction - given a message, look through the list of
-   * redaction rules and apply if matching.
-   * @param msg The message to examine
+   * redaction rules and apply if matching. If so, return the redacted
+   * String, else return null.
+   * @param msg The message to examine.
    * @return The redacted message, if anything changed.
    */
   public String redact(String msg) {
