@@ -1,0 +1,6 @@
+# Valid positive test
+WHERE::\d\d\d\d-\d\d\d\d-\d\d\d\d-\d\d\d\d::XXXX-XXXX-XXXX-XXXX
+WHERE::\d\d\d-\d\d-\d\d\d\d::XXX-XX-XXXX
+password=::password=".*"::password="?????"
+::ABC::???
+

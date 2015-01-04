@@ -134,7 +134,12 @@ public class StringRedactor {
       try {
         String line;
         while ((line = in.readLine()) != null) {
-          parseOneRule(sr, line.trim(), filename, lineNo);
+          line = line.trim();
+          if ((line.length() == 0) || line.startsWith("#")) {
+            lineNo++;
+            continue;
+          }
+          parseOneRule(sr, line, filename, lineNo);
           lineNo++;
         }
       } finally {
