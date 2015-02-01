@@ -41,10 +41,10 @@ import java.util.Enumeration;
  * log4j.appender.redactor.policy.rules=[RULES]
  * </pre>
  * <p/>
- * [APPENDERS] should be the list of appenders, comma separated, to wrap for
+ * [APPENDERS] should be the list of appenderRefs, comma separated, to wrap for
  * redaction.
  * <p/>
- * All the appenders listed in [APPENDERS] must be added to the rootLogger.
+ * All the appenderRefs listed in [APPENDERS] must be added to the rootLogger.
  * <p/>
  * The <code>redactor</code> appender itself must be added to the rootLogger as
  * the last appender.
@@ -64,7 +64,7 @@ import java.util.Enumeration;
  */
 public class RedactorAppender extends RewriteAppender {
   private RedactorPolicy policy;
-  private String[] appenders;
+  private String[] appenderRefs;
 
   /**
    * Log4j configurator calls this with the contents found in the config file.
@@ -76,16 +76,16 @@ public class RedactorAppender extends RewriteAppender {
   /**
    * Log4j configurator calls this with the contents found in the config file.
    */
-  public void setAppenderRefs(String appenderRefs) {
-    this.appenders = appenderRefs.split(",");
+  public void setAppenderRefs(String refs) {
+    this.appenderRefs = refs.split(",");
   }
 
   /**
-   * For each of the given appenders that are attached to the given logger,
+   * For each of the given appenderRefs that are attached to the given logger,
    * place a RedactorAppender "in front of" the real appender so that it can
    * do redaction magic.
    * @param logger The logger to operate on.
-   * @param appenders The appenders to wrap.
+   * @param appenders The appenderRefs to wrap.
    */
   private void wrapAppender(Logger logger, String[] appenders) {
     for (String appenderName : appenders) {
@@ -105,7 +105,7 @@ public class RedactorAppender extends RewriteAppender {
 
   /**
    * Called after all options are read in so that they can be acted on
-   * at one time. Here we wrap all the necessary appenders with
+   * at one time. Here we wrap all the necessary appenderRefs with
    * RedactorAppender()s.
    */
   @Override
@@ -114,9 +114,9 @@ public class RedactorAppender extends RewriteAppender {
     Enumeration e = LogManager.getCurrentLoggers();
     while (e.hasMoreElements()) {
       Logger logger = (Logger) e.nextElement();
-      wrapAppender(logger, appenders);
+      wrapAppender(logger, appenderRefs);
     }
-    wrapAppender(LogManager.getRootLogger(), appenders);
+    wrapAppender(LogManager.getRootLogger(), appenderRefs);
   }
 
   @Override
