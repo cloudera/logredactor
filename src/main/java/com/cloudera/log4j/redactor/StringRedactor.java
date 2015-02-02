@@ -18,6 +18,7 @@
 package com.cloudera.log4j.redactor;
 
 import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -71,9 +72,6 @@ public class StringRedactor {
             }
           };
 
-/*
-*/
-
   /**
    * This class is created by the JSON ObjectMapper in createFromJsonFile().
    * It holds one rule for redaction - a description and then
@@ -85,10 +83,6 @@ public class StringRedactor {
     private String search;
     String replace;
     Pattern pattern;
-
-    public String getDescription() {
-      return description;
-    }
 
     public void setDescription(String description) {
       this.description = description;
@@ -178,6 +172,8 @@ public class StringRedactor {
     }
 
     ObjectMapper mapper = new ObjectMapper();
+    // Allow for forward compatibility (and be generous with accepting input)
+    mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
     RedactionPolicy policy = mapper.readValue(file, RedactionPolicy.class);
 
     if (policy.getVersion() == -1) {

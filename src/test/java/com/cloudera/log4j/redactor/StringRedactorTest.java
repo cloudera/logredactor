@@ -32,7 +32,6 @@ public class StringRedactorTest {
 
   @After
   public void tearDown() throws Exception {
-
   }
 
   @Test
@@ -90,15 +89,6 @@ public class StringRedactorTest {
   }
 
   @Test
-  public void testExtraAttr() throws Exception {
-    final String fileName = resourcePath + "/extra-attr.json";
-    thrown.expect(JsonMappingException.class);
-    thrown.expectMessage("extra");
-    thrown.expectMessage(fileName);
-    StringRedactor sr = StringRedactor.createFromJsonFile(fileName);
-  }
-
-  @Test
   public void testNoSearch() throws Exception {
     final String fileName = resourcePath + "/no-search.json";
     thrown.expect(JsonMappingException.class);
@@ -137,6 +127,14 @@ public class StringRedactorTest {
   @Test
   public void testBasicGood1() throws Exception {
     String fileName = resourcePath + "/good-1.json";
+    StringRedactor sr = StringRedactor.createFromJsonFile(fileName);
+    String redacted = sr.redact("Hello, world");
+    Assert.assertEquals("Hxllx, wxrld", redacted);
+  }
+
+  @Test
+  public void testExtraAttr() throws Exception {
+    final String fileName = resourcePath + "/extra-attr.json";
     StringRedactor sr = StringRedactor.createFromJsonFile(fileName);
     String redacted = sr.redact("Hello, world");
     Assert.assertEquals("Hxllx, wxrld", redacted);
