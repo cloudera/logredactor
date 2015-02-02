@@ -137,6 +137,28 @@ public class StringRedactor {
     public void setRules(List<RedactionRule> rules) {
       this.rules = rules;
     }
+
+    /**
+     * Perform validation checking on the constructed JSON.
+     * @throws JsonMappingException
+     */
+    public void validate() throws JsonMappingException {
+      if (version == -1) {
+        throw new JsonMappingException("No version specified.");
+      } else if (version != 1) {
+        throw new JsonMappingException("Unknown version " + version);
+      }
+      for (RedactionRule rule : rules) {
+        if ((rule.search == null) || rule.search.isEmpty()) {
+          throw new JsonMappingException("The search regular expression cannot " +
+                  "be empty.");
+        }
+        if ((rule.replace == null || rule.replace.isEmpty())) {
+          throw new JsonMappingException("The replacement text cannot " +
+                  "be empty.");
+        }
+      }
+    }
   }
 
   /**
@@ -175,22 +197,9 @@ public class StringRedactor {
     // Allow for forward compatibility (and be generous with accepting input)
     mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
     RedactionPolicy policy = mapper.readValue(file, RedactionPolicy.class);
+    policy.validate();
 
-    if (policy.getVersion() == -1) {
-      throw new JsonMappingException("No version specified in " + fileName);
-    } else if (policy.getVersion() != 1) {
-      throw new JsonMappingException("Unknown version " + policy.getVersion() +
-              " in " + fileName);
-    }
     for (RedactionRule rule : policy.getRules()) {
-      if ((rule.getSearch() == null) || rule.getSearch().isEmpty()) {
-        throw new JsonMappingException("The search regular expression cannot " +
-                "be empty in file " + fileName);
-      }
-      if ((rule.getReplace() == null || rule.getReplace().isEmpty())) {
-        throw new JsonMappingException("The replacement text cannot " +
-                "be empty in file " + fileName);
-      }
       String trigger = (rule.getTrigger() != null) ? rule.getTrigger() : "";
       List<RedactionRule> list = sr.ruleMap.get(trigger);
       if (list == null) {

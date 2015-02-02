@@ -66,7 +66,6 @@ public class StringRedactorTest {
     final String fileName = resourcePath + "/no-version.json";
     thrown.expect(JsonMappingException.class);
     thrown.expectMessage("No version specified");
-    thrown.expectMessage(fileName);
     StringRedactor sr = StringRedactor.createFromJsonFile(fileName);
   }
 
@@ -75,7 +74,6 @@ public class StringRedactorTest {
     final String fileName = resourcePath + "/unknown-version.json";
     thrown.expect(JsonMappingException.class);
     thrown.expectMessage("Unknown version");
-    thrown.expectMessage(fileName);
     StringRedactor sr = StringRedactor.createFromJsonFile(fileName);
   }
 
@@ -94,7 +92,6 @@ public class StringRedactorTest {
     thrown.expect(JsonMappingException.class);
     thrown.expectMessage("search");
     thrown.expectMessage("cannot be empty");
-    thrown.expectMessage(fileName);
     StringRedactor sr = StringRedactor.createFromJsonFile(fileName);
   }
 
@@ -104,7 +101,6 @@ public class StringRedactorTest {
     thrown.expect(JsonMappingException.class);
     thrown.expectMessage("replace");
     thrown.expectMessage("cannot be empty");
-    thrown.expectMessage(fileName);
     StringRedactor sr = StringRedactor.createFromJsonFile(fileName);
   }
 
