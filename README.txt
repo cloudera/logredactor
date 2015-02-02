@@ -1,48 +1,67 @@
 Log Redactor
 
-Log4j Appender that redacts log messages using redaction rules
+This Log4j Appender redacts log messages using redaction rules
 before delegating to other Appenders.
-
-All its configuration is in the log4j.properties file, because this
-file is hot-reloaded by most services, it means the redactor can be
-hot-reconfigured (i.e. adding additional redaction rules).
 
 INSTALL AND CONFIGURATION:
 
 Install the Log Redactor JAR file in the classpath.
 
-Edit the log4j.properties file adding the following appender definition:
+For each logger whose content you wish to redact, add the following to the
+log4j.properties file:
 
  log4j.appender.redactor=com.cloudera.log4j.redactor.RedactorAppender
  log4j.appender.redactor.appenderRefs=[APPENDERS]
  log4j.appender.redactor.policy=com.cloudera.log4j.redactor.RedactorPolicy
- log4j.appender.redactor.policy.rules=[RULES]
+ log4j.appender.redactor.policy.rules=[RULES FILE]
 
-[APPENDERS] should be the list of appenders, comma separated, to wrap for
-redaction. All these appenders must be added to the rootLogger.
+* "redactor" is an arbitrary name for this particular redaction appender
+* [APPENDERS] is the list of appenders belonging to the logger whose content
+  you wish to redact.  
+* [RULES FILE] is a full path to a file specifying redaction rules
 
-The redactor appender itself must be added to the rootLogger as the last
-appender.
+The redactor appender itself must be added to the logger whose content you
+wish to redact as the last appender.
 
-(NOTE: refer to the bottom of this file for details on how)
-(      to use appenders not associated with the rootLogger)
+The redaction rules specified in the [RULES FILE] above are specified in
+JSON format. The file looks like
 
-[RULES] are a list of [TRIGGER]::[REGEX]::[REDACTION_MASK] triplets.  The
-rules can either be specified either
-  1) inline in one long string in .policy.rules, separated by '||'
-  2) in a file, each rule on one line, and the full path to the file
-     given in .policy.rules.
+{
+  "version": 1,
+  "rules": [
+    {
+      "description": "This is the first rule",
+      "trigger": "triggerstring 1",
+      "search": "regex 1",
+      "replace": "replace 1"
+    },
+    {
+      "description": "This is the second rule",
+      "trigger": "triggerstring 2",
+      "search": "regex 2",
+      "replace": "replace 2"
+    }
+  ]
+}
 
-If the log message contains the [TRIGGER], the [REGEX] will be searched
-and all occurrences will be replaced with the [REDACTION_MASK].
+If the log message contains the "trigger", the "search" will be searched
+and all occurrences will be replaced with "replace"
 
-All rules for which the [TRIGGER] is found will be applied. If the [TRIGGER]
-is empty, the rule will be applied to all log messages.
+"Trigger" is a simple string compare and exists for performance reasons:
+a simple string compare is much faster than a regular expression. The 
+trigger is optional. If it does not exist, the message will always have
+"search" applied.
 
-IMPORTANT: [REGEX] are Java regular expressions. Make sure escaping of \ is
-properly done.
+The "search" field is a regular expression, and is required. Make sure that
+proper escaping is used.
 
-Working example of log4j.properties:
+The "replace" field is a simple string and is also required. In practice,
+it usually looks something like "XXXXXXX".
+
+The "description" field is optional and is intended for self-documentation
+purposes.
+
+Working example of a simple log4j.properties:
 
 -----
 # STDOUT Appender
@@ -54,58 +73,68 @@ log4j.appender.stdout.layout.ConversionPattern=%d{ISO8601} %-5p %c{1} - %m%n
 log4j.appender.redactor=com.cloudera.log4j.redactor.RedactorAppender
 log4j.appender.redactor.appenderRefs=stdout
 log4j.appender.redactor.policy=com.cloudera.log4j.redactor.RedactorPolicy
-log4j.appender.redactor.policy.rules=\
-password=::password=\\".*\\"::password=\"?????\"||\
-::\\d\\d\\d\\d-\\d\\d\\d\\d-\\d\\d\\d\\d-\\d\\d\\d\\d::XXXX-XXXX-XXXX-XXXX||\
-::\\d\\d\\d-\\d\\d-\\d\\d\\d\\d::XXX-XX-XXXX||
+log4j.appender.redactor.policy.rules=/full/path/to/rules.json
 
-log4j.rootLogger=ALL, stdout, redactor
+log4j.rootLogger=stdout, redactor
 -----
 
-This example has 3 rules. The first one is triggered when 'password=' is found
-and it replaces the password value (assumed between double quotes) with ?????.
-The second and third rule are applied to all log messages, redacting credit
-card numbers and SSN numbers.
+Working example of rules.json:
+{
+  "version": "1",
+  "rules": [
+    {
+      "description": "No more vowels",
+      "search": "[aeiou]",
+      "replace": "x"
+    },
+    {
+      "description": "Passwords",
+      "trigger": "password",
+      "search": "password=.*",
+      "replace": "password=xxxxx"
+    }
+  ]
+}
+
+This example has 2 rules. The first banishes lowercase vowels from all
+log messages, and replaces them with x's. The second looks for lines
+containing "password", and then replaces any password=.... occurrences
+with password=xxxxx.
+
+For more extensive and appropriate rules, see the "real-1.json" file in
+the test resources directory.
 
 USING REDACTOR APPENDERS IN MULTIPLE LOGGERS:
 
-Due to the mechanism Log4J loads log4j.properties, a RedactorAppender can be
-used only in one logger (typically the rootLogger).
-
-In case that a RedactorAppender is to be used in multiple loggers, each logger
-will have to use its own redactor definition.
-
-For example:
+One individual redacting appender can be used in only one logger. To
+redact more than one logger, create multiple redacting appenders, like so:
 
 ----
-# LOG Appender
-log4j.appender.LOG=org.apache.log4j.ConsoleAppender
-log4j.appender.LOG.Target=System.out
-log4j.appender.LOG.layout=org.apache.log4j.PatternLayout
-log4j.appender.LOG.layout.ConversionPattern=LOG %m%n
-log4j.appender.X=org.apache.log4j.ConsoleAppender
-log4j.appender.X.Target=System.err
-log4j.appender.X.layout=org.apache.log4j.PatternLayout
-log4j.appender.X.layout.ConversionPattern=X   %m%n
+# CONS Appender (for the console)
+log4j.appender.CONS=org.apache.log4j.ConsoleAppender
+log4j.appender.CONS.Target=System.out
+log4j.appender.CONS.layout=org.apache.log4j.PatternLayout
+log4j.appender.CONS.layout.ConversionPattern=CONS %m%n
 
-log4j.appender.redactor=com.cloudera.log4j.redactor.RedactorAppender
-log4j.appender.redactor.appenderRefs=LOG,X
-log4j.appender.redactor.policy=com.cloudera.log4j.redactor.RedactorPolicy
-log4j.appender.redactor.policy.rules=\
-WHERE::\\d\\d\\d\\d-\\d\\d\\d\\d-\\d\\d\\d\\d-\\d\\d\\d\\d::XXXX-XXXX-XXXX-XXXX||\
-WHERE::\\d\\d\\d-\\d\\d-\\d\\d\\d\\d::XXX-XX-XXXX||\
-password=::password=\\".*\\"::password=\"?????\"||\
-::ABC::???
+# RFA - Rolling File Appender
+log4j.appender.RFA=org.apache.log4j.RollingFileAppender
+log4j.appender.RFA.File=/var/log/file.out
+log4j.appender.RFA.layout=org.apache.log4j.PatternLayout
+log4j.appender.RFA.layout.ConversionPattern=%d{ISO8601} %p %c: %m%n
+log4j.appender.RFA.MaxFileSize=200MB
+log4j.appender.RFA.MaxBackupIndex=10
 
-log4j.appender.Xredactor=com.cloudera.log4j.redactor.RedactorAppender
-log4j.appender.Xredactor.appenderRefs=LOG,X
-log4j.appender.Xredactor.policy=com.cloudera.log4j.redactor.RedactorPolicy
-log4j.appender.Xredactor.policy.rules=\
-WHERE::\\d\\d\\d\\d-\\d\\d\\d\\d-\\d\\d\\d\\d-\\d\\d\\d\\d::XXXX-XXXX-XXXX-XXXX||\
-WHERE::\\d\\d\\d-\\d\\d-\\d\\d\\d\\d::XXX-XX-XXXX||\
-password=::password=\\".*\\"::password=\"?????\"||\
-::ABC::???
+# Redactor for rootLogger
+log4j.appender.rootRedactor=com.cloudera.log4j.redactor.RedactorAppender
+log4j.appender.rootRedactor.appenderRefs=CONS
+log4j.appender.rootRedactor.policy=com.cloudera.log4j.redactor.RedactorPolicy
+log4j.appender.rootRedactor.policy.rules=/full/path/to/rules.json
 
-log4j.rootLogger=ALL, LOG, redactor
-log4j.logger.com.cloudera=ALL, X, Xredactor
-----
+# Redactor for com.cloudera
+log4j.appender.clouderaRedactor=com.cloudera.log4j.redactor.RedactorAppender
+log4j.appender.clouderaRedactor.appenderRefs=RFA
+log4j.appender.clouderaRedactor.policy=com.cloudera.log4j.redactor.RedactorPolicy
+log4j.appender.clouderaRedactor.policy.rules=/full/path/to/rules.json
+
+log4j.rootLogger=CONS, rootRedactor
+log4j.logger.com.cloudera=RFA, clouderaRedactor

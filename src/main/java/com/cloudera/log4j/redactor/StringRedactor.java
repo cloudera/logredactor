@@ -21,10 +21,7 @@ import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -34,7 +31,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * This class contains the logic for redacting Strings.
+ * This class contains the logic for redacting Strings.  It is initialized
+ * from rules contained in a JSON file.
  */
 public class StringRedactor {
 
@@ -81,121 +79,14 @@ public class StringRedactor {
             }
           };
 
-  /**
-   * Given one rule in (hopefully) trigger::regex::mask form, parse it
-   * and throw errors if needed.
-   * @param sr The StringRedactor to parse the rule into
-   * @param rule The line to parse
-   * @param file The file from whence it came (or if no file, null)
-   * @param lineNo The line in file, if file is non-null.
-   * @throws IllegalArgumentException
-   */
-  private static void parseOneRule(StringRedactor sr, String rule,
-                                   String file, int lineNo)
-          throws IllegalArgumentException {
-    String[] ruleTriple = rule.trim().split("::", 3);
-    String where = "";
-    if (file != null) {
-      where = " at line " + lineNo + " in file " + file;
-    }
-    if (ruleTriple.length != 3) {
-      throw new IllegalArgumentException(
-              "Invalid rule" + where + ", it should have 3 parts: " + rule);
-    }
-    String trigger = ruleTriple[0];
-    String regex = ruleTriple[1];
-    String mask = ruleTriple[2];
-
-    if (regex.length() == 0) {
-      throw new IllegalArgumentException(
-              "Invalid rule" + where + ", regex cannot be empty: " + rule);
-    }
-    List<PatternReplacement> list = sr.prMap.get(trigger);
-    if (list == null) {
-      list = new ArrayList<PatternReplacement>();
-      sr.prMap.put(trigger, list);
-    }
-    list.add(new PatternReplacement(regex, mask));
-  }
-
-  /** Private constructor to prevent external instantiation */
-  private StringRedactor() {}
+/*
+*/
 
   /**
-   * Create a StringRedactor based on the rules in a file.  The file is
-   * expected to have one rule per line, where each rule is in the form
-   * trigger::regex::mask.  See the README for further details.
-   * @param filename The file containing rules for redaction.
-   * @return A new instance of a StringRedactor.
-   * @throws IllegalArgumentException
+   * This class is created by the JSON ObjectMapper in createFromJsonFile().
+   * It holds one rule for redaction - a description and then
+   * trigger-search-replace.
    */
-  public static StringRedactor createFromFile (String filename)
-          throws IllegalArgumentException {
-    StringRedactor sr = new StringRedactor();
-    int lineNo = 0;
-    try {
-      BufferedReader in = new BufferedReader(new FileReader(filename));
-      try {
-        String line;
-        while ((line = in.readLine()) != null) {
-          line = line.trim();
-          if ((line.length() == 0) || line.startsWith("#")) {
-            lineNo++;
-            continue;
-          }
-          parseOneRule(sr, line, filename, lineNo);
-          lineNo++;
-        }
-      } finally {
-        in.close();
-      }
-    } catch (FileNotFoundException e) {
-      throw new IllegalArgumentException("Invalid path in rule", e);
-    } catch (IOException e) {
-      throw new IllegalArgumentException("Bad input in rule file at line " +
-              lineNo, e);
-    }
-    return sr;
-  }
-
-  /**
-   * Create a StringRedactor based on the rules contained on one line. Each
-   * rule in the line is separated by ||. The rules themselves are in the
-   * form trigger::regex::mask.  See the README for further details.
-   * @param rules A || separated list of rules.
-   * @return A new instance of a StringRedactor.
-   * @throws IllegalArgumentException
-   */
-  public static StringRedactor createFromString (String rules)
-          throws IllegalArgumentException {
-    StringRedactor sr = new StringRedactor();
-    for (String rule : rules.trim().split("\\|\\|")) {
-      parseOneRule(sr, rule, null, 0);
-    }
-    return sr;
-  }
-
-  /*
-  {
-  "version": 1,
-  "rules": [
-    {
-      "description": "This is the first rule",
-      "trigger": "triggerstring 1",
-      "search": "regex 1",
-      "replace": "replace 1"
-    },
-    {
-      "description": "This is the second rule",
-      "trigger": "triggerstring 2",
-      "search": "regex 2",
-      "replace": "replace 2"
-    }
-  ]
-}
-
-   */
-
   private static class RedactionRule {
     private String description;
     private String trigger;
@@ -235,6 +126,10 @@ public class StringRedactor {
     }
   }
 
+  /**
+   * This class is created by the JSON ObjectMapper in createFromJsonFile().
+   * It contains a version number and an array of RedactionRules.
+   */
   private static class RedactionPolicy {
     private int version = -1;
     private List<RedactionRule> rules;

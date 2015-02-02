@@ -38,29 +38,20 @@ import java.util.Enumeration;
  * log4j.appender.redactor=com.cloudera.log4j.redactor.RedactorAppender
  * log4j.appender.redactor.appenderRefs=[APPENDERS]
  * log4j.appender.redactor.policy=com.cloudera.log4j.redactor.RedactorPolicy
- * log4j.appender.redactor.policy.rules=[RULES]
+ * log4j.appender.redactor.policy.rules=/full/path/to/rule/file.json
  * </pre>
  * <p/>
  * [APPENDERS] should be the list of appenderRefs, comma separated, to wrap for
  * redaction.
  * <p/>
- * All the appenderRefs listed in [APPENDERS] must be added to the rootLogger.
+ * All the appenderRefs listed in [APPENDERS] must match the appenders listed
+ * for the logger that you wish to redact.
  * <p/>
- * The <code>redactor</code> appender itself must be added to the rootLogger as
- * the last appender.
+ * The <code>redactor</code> appender itself must be added to the logger that
+ * you wish to redact.
  * <p/>
- * [RULES] are either
- * <ol>
- *   <li>One big string containing a list of
- *       [TRIGGER]::[REGEX]::[REDACTION_MASK] separated by '||', or</li>
- *   <li>A full path to a file (starts with '/'). This file must contain a
- *       [TRIGGER]::[REGEX]::[REDACTION_MASK] triple on each line.</li>
- * </ol>
- * <p/>
- * If the log message contains the [TRIGGER], the message will be searched
- * for [REGEX] and all occurrences will be replaced with the [REDACTION_MASK].
- * <p/>
- * All rules for which the [TRIGGER] is found will be applied.
+ * The format of the rules file in policy.rules is described in the
+ * <code>StringRedactor</code> class.
  */
 public class RedactorAppender extends RewriteAppender {
   private RedactorPolicy policy;

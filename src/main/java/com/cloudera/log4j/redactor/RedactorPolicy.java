@@ -21,6 +21,8 @@ import org.apache.log4j.rewrite.RewritePolicy;
 import org.apache.log4j.spi.LoggingEvent;
 import org.apache.log4j.spi.OptionHandler;
 
+import java.io.IOException;
+
 /**
  * <code>RewritePolicy</code> implementation that applies the redaction
  * rules defined in the configuration of the <code>RedactorPolicy</code> in
@@ -30,6 +32,7 @@ import org.apache.log4j.spi.OptionHandler;
  */
 public class RedactorPolicy implements RewritePolicy, OptionHandler {
 
+  // 'rules' is really the name of the file containing the rules
   private String rules;
   private StringRedactor redactor;
 
@@ -43,16 +46,17 @@ public class RedactorPolicy implements RewritePolicy, OptionHandler {
 
   /**
    * Called after all options are read in (in our case this is only setRules())
-   * so that they can be acted on at one time.  The rules are either in the
-   * log4j config file directly, or the rules is a full path to a file
-   * containing rules.  This implements the OptionHandler interface.
+   * so that they can be acted on at one time.  The rules are a full path to
+   * a file containing rules in JSON format.  This implements the
+   * OptionHandler interface.
    */
   @Override
   public void activateOptions() {
-    if (rules.startsWith("/")) {  // assumed to be filename
-      redactor = StringRedactor.createFromFile(rules);
-    } else {
-      redactor = StringRedactor.createFromString(rules);
+    try {
+      redactor = StringRedactor.createFromJsonFile(rules);
+    } catch (IOException e) {
+      // Changing the exception, since activateOptions can't throw an IOException
+      throw new IllegalArgumentException("Problem with rules file " + rules, e);
     }
   }
 
