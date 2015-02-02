@@ -36,27 +36,19 @@ import java.util.regex.Pattern;
  */
 public class StringRedactor {
 
-  private static class PatternReplacement {
-    Pattern pattern;
-    String replacement;
-
-    public PatternReplacement(String pattern, String replacement) {
-      this.pattern = Pattern.compile(pattern);
-      this.replacement = replacement;
-    }
-  }
-
   private static class MatcherReplacement {
     Matcher matcher;
     String replacement;
 
-    public MatcherReplacement(PatternReplacement pr) {
-      matcher = pr.pattern.matcher("");
-      replacement = pr.replacement;
+    public MatcherReplacement(RedactionRule rr) {
+      matcher = rr.pattern.matcher("");
+      replacement = rr.replace;
     }
   }
 
-  private Map<String, List<PatternReplacement>> prMap = new HashMap<String, List<PatternReplacement>>();
+  // Map of {trigger -> RedactionRule}
+  private Map<String, List<RedactionRule>> ruleMap
+          = new HashMap<String, List<RedactionRule>>();
 
   // This <code>ThreadLocal</code> keeps and reuses the Java RegEx
   // <code>Matcher</code>s for all rules, one set per thread because
@@ -67,12 +59,12 @@ public class StringRedactor {
             protected Map<String, List<MatcherReplacement>> initialValue() {
               Map<String, List<MatcherReplacement>> matcherMap
                       = new HashMap<String, List<MatcherReplacement>>();
-              for (Map.Entry<String, List<PatternReplacement>> entry
-                      : prMap.entrySet()) {
+              for (Map.Entry<String, List<RedactionRule>> entry
+                      : ruleMap.entrySet()) {
                 List<MatcherReplacement> list = new ArrayList<MatcherReplacement>();
                 matcherMap.put(entry.getKey(), list);
-                for (PatternReplacement pr : entry.getValue()) {
-                  list.add(new MatcherReplacement(pr));
+                for (RedactionRule rr : entry.getValue()) {
+                  list.add(new MatcherReplacement(rr));
                 }
               }
               return matcherMap;
@@ -85,13 +77,14 @@ public class StringRedactor {
   /**
    * This class is created by the JSON ObjectMapper in createFromJsonFile().
    * It holds one rule for redaction - a description and then
-   * trigger-search-replace.
+   * trigger-search-replace. See the comments in createFromJsonFile().
    */
   private static class RedactionRule {
     private String description;
     private String trigger;
     private String search;
-    private String replace;
+    String replace;
+    Pattern pattern;
 
     public String getDescription() {
       return description;
@@ -115,6 +108,7 @@ public class StringRedactor {
 
     public void setSearch(String search) {
       this.search = search;
+      this.pattern = Pattern.compile(search);
     }
 
     public String getReplace() {
@@ -171,10 +165,10 @@ public class StringRedactor {
    * }
    * @param fileName The name of the file to read
    * @return A freshly allocated StringRedactor
-   * @throws IllegalArgumentException
+   * @throws JsonParseException, JsonMappingException, IOException
    */
   public static StringRedactor createFromJsonFile (String fileName)
-          throws JsonParseException, JsonMappingException, IOException {
+          throws IOException {
     StringRedactor sr = new StringRedactor();
 
     File file = new File(fileName);
@@ -202,12 +196,12 @@ public class StringRedactor {
                 "be empty in file " + fileName);
       }
       String trigger = (rule.getTrigger() != null) ? rule.getTrigger() : "";
-      List<PatternReplacement> list = sr.prMap.get(trigger);
+      List<RedactionRule> list = sr.ruleMap.get(trigger);
       if (list == null) {
-        list = new ArrayList<PatternReplacement>();
-        sr.prMap.put(trigger, list);
+        list = new ArrayList<RedactionRule>();
+        sr.ruleMap.put(trigger, list);
       }
-      list.add(new PatternReplacement(rule.getSearch(), rule.getReplace()));
+      list.add(rule);
     }
 
     return sr;
@@ -227,6 +221,8 @@ public class StringRedactor {
    * @return The (potentially) redacted message.
    */
   public String redact(String msg) {
+    String original = msg;
+    boolean matched = false;
     for (Map.Entry<String, List<MatcherReplacement>> entry
             : mrTL.get().entrySet()) {
       String key = entry.getKey();
@@ -235,10 +231,11 @@ public class StringRedactor {
           mr.matcher.reset(msg);
           if (mr.matcher.find()) {
             msg = mr.matcher.replaceAll(mr.replacement);
+            matched = true;
           }
         }
       }
     }
-    return msg;
+    return matched ? msg : original;
   }
 }
