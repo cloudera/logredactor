@@ -157,8 +157,12 @@ public class StringRedactorTest {
     tests.add(new String[]{"www.c1-foo.org rules!", "HOSTNAME.REDACTED rules!"});
     tests.add(new String[]{"IP1 8.8.8.8", "IP1 0.0.0.0"});
     tests.add(new String[]{"IP2 192.168.0.1", "IP2 0.0.0.0"});
-    tests.add(new String[]{"My email is myoder@cloudera.com", "My email is email@redacted.host"});
-    tests.add(new String[]{"hello.world@ex.x-1.fr is interesting", "email@redacted.host is interesting"});
+    tests.add(new String[]{"My email is myoder@cloudera.com",
+            "My email is email@redacted.host"});
+    tests.add(new String[]{"hello.world@ex.x-1.fr is interesting",
+            "email@redacted.host is interesting"});
+    tests.add(new String[]{"Multi 1234-2345-3456-4567\nLine 123-45-6789",
+            "Multi XXXX-XXXX-XXXX-XXXX\nLine XXX-XX-XXXX"});
 
     String redacted;
     for (String[] test : tests) {
