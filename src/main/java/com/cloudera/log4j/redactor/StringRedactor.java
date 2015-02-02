@@ -77,7 +77,7 @@ public class StringRedactor {
    * It holds one rule for redaction - a description and then
    * trigger-search-replace. See the comments in createFromJsonFile().
    */
-  private static class RedactionRule {
+  public static class RedactionRule {
     private String description;
     private String trigger;
     private String search;
@@ -118,7 +118,7 @@ public class StringRedactor {
    * This class is created by the JSON ObjectMapper in createFromJsonFile().
    * It contains a version number and an array of RedactionRules.
    */
-  private static class RedactionPolicy {
+  public static class RedactionPolicy {
     private int version = -1;
     private List<RedactionRule> rules;
 
