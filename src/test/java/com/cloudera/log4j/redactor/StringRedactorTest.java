@@ -3,6 +3,7 @@ package com.cloudera.log4j.redactor;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import junit.framework.Assert;
+import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
@@ -14,6 +15,8 @@ import java.io.FileNotFoundException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class StringRedactorTest {
 
@@ -105,6 +108,23 @@ public class StringRedactorTest {
   }
 
   @Test
+  public void testNoBrace() throws Exception {
+    final String fileName = resourcePath + "/no-brace.json";
+    thrown.expect(JsonMappingException.class);
+    thrown.expectMessage("Can not instantiate");
+    thrown.expectMessage("no single-String constructor/factory");
+    StringRedactor sr = StringRedactor.createFromJsonFile(fileName);
+  }
+
+  @Test
+  public void testBadRegex() throws Exception {
+    final String fileName = resourcePath + "/bad-regex.json";
+    thrown.expect(JsonMappingException.class);
+    thrown.expectMessage("Unclosed character class");
+    StringRedactor sr = StringRedactor.createFromJsonFile(fileName);
+  }
+
+  @Test
   public void testEmptyFile() throws Exception {
     final String fileName = resourcePath + "/empty.json";
     StringRedactor sr = StringRedactor.createFromJsonFile(fileName);
@@ -173,5 +193,51 @@ public class StringRedactorTest {
     StringRedactor sr = StringRedactor.createFromJsonFile(fileName);
     String redacted = sr.redact(MESSAGE);
     Assert.assertEquals("This string is not redadted", redacted);
+  }
+
+  private int multithreadedErrors;
+
+  @Test
+  public void testMultithreading() throws Exception {
+    String fileName = resourcePath + "/numbers.json";  // [0-9] -> #
+    final StringRedactor sr = StringRedactor.createFromJsonFile(fileName);
+    String redacted = sr.redact("asdf1234fdas666 H3ll0 w0rld");
+    Assert.assertEquals("asdf####fdas### H#ll# w#rld", redacted);
+
+    multithreadedErrors = 0;
+    Thread[] threads = new Thread[50];
+    for (int i = 0; i < threads.length; i++) {
+      threads[i] = new Thread(new Runnable() {
+        @Override
+        public void run() {
+          Pattern numberRegex = Pattern.compile("[0-9]");
+          Matcher numberMatcher = numberRegex.matcher("");
+          for (int j = 0; j < 500; j++) {
+            String original = RandomStringUtils.random(2048);
+            String redacted = sr.redact(original);
+            numberMatcher.reset(redacted);
+            boolean found = numberMatcher.find();
+            if (found) {
+              synchronized (StringRedactorTest.this) {
+                // Assertions here don't stop or fail the whole test
+                // So increment this; the main thread will see it and die.
+                multithreadedErrors++;
+              }
+            }
+            Assert.assertTrue("Found numbers; orig: " + original +
+                    "\n redacted: " + redacted, !found);
+          }
+        }
+      });
+    }
+
+    for (Thread thread : threads) {
+      thread.start();
+    }
+
+    for (Thread thread : threads) {
+      thread.join();
+    }
+    Assert.assertEquals("Hit some errors", multithreadedErrors, 0);
   }
 }
