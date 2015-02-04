@@ -27,7 +27,7 @@
   </parent>
   <groupId>com.cloudera.logredactor</groupId>
   <artifactId>logredactor</artifactId>
-  <version>1.0.0</version>
+  <version>1.0.1-SNAPSHOT</version>
   <description>Log Redactor</description>
   <name>Log Redactor</name>
   <packaging>jar</packaging>
