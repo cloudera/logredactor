@@ -37,6 +37,9 @@ import java.util.regex.Pattern;
  */
 public class StringRedactor {
 
+  /**
+   * The thread-local Matcher and replacement for one rule.
+   */
   private static class MatcherReplacement {
     Matcher matcher;
     String replacement;
@@ -46,10 +49,6 @@ public class StringRedactor {
       replacement = rr.replace;
     }
   }
-
-  // Map of {trigger -> RedactionRule}
-  private Map<String, List<RedactionRule>> ruleMap
-          = new HashMap<String, List<RedactionRule>>();
 
   // This <code>ThreadLocal</code> keeps and reuses the Java RegEx
   // <code>Matcher</code>s for all rules, one set per thread because
@@ -72,17 +71,21 @@ public class StringRedactor {
             }
           };
 
+  // Map of {trigger -> RedactionRule}
+  private Map<String, List<RedactionRule>> ruleMap
+          = new HashMap<String, List<RedactionRule>>();
+
   /**
    * This class is created by the JSON ObjectMapper in createFromJsonFile().
    * It holds one rule for redaction - a description and then
    * trigger-search-replace. See the comments in createFromJsonFile().
    */
-  public static class RedactionRule {
+  private static class RedactionRule {
     private String description;
     private String trigger;
     private String search;
-    String replace;
-    Pattern pattern;
+    private String replace;
+    private Pattern pattern;
 
     public void setDescription(String description) {
       this.description = description;
@@ -112,13 +115,25 @@ public class StringRedactor {
     public void setReplace(String replace) {
       this.replace = replace;
     }
+
+    private void validate() throws JsonMappingException {
+      if ((search == null) || search.isEmpty()) {
+        throw new JsonMappingException("The search regular expression cannot " +
+                "be empty.");
+      }
+      if ((replace == null || replace.isEmpty())) {
+        throw new JsonMappingException("The replacement text cannot " +
+                "be empty.");
+      }
+
+    }
   }
 
   /**
    * This class is created by the JSON ObjectMapper in createFromJsonFile().
    * It contains a version number and an array of RedactionRules.
    */
-  public static class RedactionPolicy {
+  private static class RedactionPolicy {
     private int version = -1;
     private List<RedactionRule> rules;
 
@@ -139,25 +154,35 @@ public class StringRedactor {
     }
 
     /**
-     * Perform validation checking on the constructed JSON.
+     * Perform validation checking on the fully constructed JSON.
      * @throws JsonMappingException
      */
-    public void validate() throws JsonMappingException {
+    private void validate() throws JsonMappingException {
       if (version == -1) {
         throw new JsonMappingException("No version specified.");
       } else if (version != 1) {
         throw new JsonMappingException("Unknown version " + version);
       }
       for (RedactionRule rule : rules) {
-        if ((rule.search == null) || rule.search.isEmpty()) {
-          throw new JsonMappingException("The search regular expression cannot " +
-                  "be empty.");
-        }
-        if ((rule.replace == null || rule.replace.isEmpty())) {
-          throw new JsonMappingException("The replacement text cannot " +
-                  "be empty.");
-        }
+        rule.validate();
       }
+    }
+  }
+
+  /**
+   * Given a RedactionPolicy created by the ObjectMapper, take the rules
+   * it contains and organize them into the ruleMap
+   * @param policy RedactionPolicy created by the ObjectMapper
+   */
+  private void populateRuleMap(RedactionPolicy policy) {
+    for (RedactionRule rule : policy.getRules()) {
+      String trigger = (rule.getTrigger() != null) ? rule.getTrigger() : "";
+      List<RedactionRule> list = ruleMap.get(trigger);
+      if (list == null) {
+        list = new ArrayList<RedactionRule>();
+        ruleMap.put(trigger, list);
+      }
+      list.add(rule);
     }
   }
 
@@ -183,10 +208,12 @@ public class StringRedactor {
    * @return A freshly allocated StringRedactor
    * @throws JsonParseException, JsonMappingException, IOException
    */
-  public static StringRedactor createFromJsonFile (String fileName)
+  public static StringRedactor createFromJsonFile(String fileName)
           throws IOException {
     StringRedactor sr = new StringRedactor();
-
+    if (fileName == null) {
+      return sr;
+    }
     File file = new File(fileName);
     // An empty file is explicitly allowed as "no rules"
     if (file.exists() && file.length() == 0) {
@@ -198,17 +225,30 @@ public class StringRedactor {
     mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
     RedactionPolicy policy = mapper.readValue(file, RedactionPolicy.class);
     policy.validate();
+    sr.populateRuleMap(policy);
+    return sr;
+  }
 
-    for (RedactionRule rule : policy.getRules()) {
-      String trigger = (rule.getTrigger() != null) ? rule.getTrigger() : "";
-      List<RedactionRule> list = sr.ruleMap.get(trigger);
-      if (list == null) {
-        list = new ArrayList<RedactionRule>();
-        sr.ruleMap.put(trigger, list);
-      }
-      list.add(rule);
+  /**
+   * Create a StringRedactor based on the JSON found in the given String.
+   * The format is identical to that described in createFromJsonFile().
+   * @param json String containing json formatted rules.
+   * @return A freshly allocated StringRedactor
+   * @throws JsonParseException, JsonMappingException, IOException
+   */
+  public static StringRedactor createFromJsonString(String json)
+          throws IOException {
+    StringRedactor sr = new StringRedactor();
+    if ((json == null) || json.isEmpty()) {
+        return sr;
     }
 
+    ObjectMapper mapper = new ObjectMapper();
+    // Allow for forward compatibility (and be generous with accepting input)
+    mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+    RedactionPolicy policy = mapper.readValue(json, RedactionPolicy.class);
+    policy.validate();
+    sr.populateRuleMap(policy);
     return sr;
   }
 

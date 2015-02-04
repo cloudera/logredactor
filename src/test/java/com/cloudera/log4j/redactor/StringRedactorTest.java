@@ -4,14 +4,16 @@ import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import junit.framework.Assert;
 import org.apache.commons.lang3.RandomStringUtils;
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
@@ -26,15 +28,25 @@ public class StringRedactorTest {
   private String resourcePath;
   private static final String MESSAGE = "This string is not redacted";
 
+  private String readFile(String file) throws IOException {
+    BufferedReader reader = new BufferedReader( new FileReader(file));
+    String line;
+    StringBuilder stringBuilder = new StringBuilder();
+    String ls = System.getProperty("line.separator");
+
+    while( ( line = reader.readLine() ) != null ) {
+      stringBuilder.append( line );
+      stringBuilder.append( ls );
+    }
+
+    return stringBuilder.toString();
+  }
+
   @Before
   public void setUp() throws Exception {
     URL resourceUrl = getClass().getResource("/good-1.json");
     File resourceFile = new File(resourceUrl.toURI());
     resourcePath = resourceFile.getParent();
-  }
-
-  @After
-  public void tearDown() throws Exception {
   }
 
   @Test
@@ -65,6 +77,15 @@ public class StringRedactorTest {
   }
 
   @Test
+  public void testNotJsonString() throws Exception {
+    final String json = readFile(resourcePath + "/non-json.json");
+    thrown.expect(JsonParseException.class);
+    thrown.expectMessage("#");
+    thrown.expectMessage("Unexpected");
+    StringRedactor sr = StringRedactor.createFromJsonString(json);
+  }
+
+  @Test
   public void testNoVersion() throws Exception {
     final String fileName = resourcePath + "/no-version.json";
     thrown.expect(JsonMappingException.class);
@@ -73,11 +94,27 @@ public class StringRedactorTest {
   }
 
   @Test
+  public void testNoVersionString() throws Exception {
+    final String json = readFile(resourcePath + "/no-version.json");
+    thrown.expect(JsonMappingException.class);
+    thrown.expectMessage("No version specified");
+    StringRedactor sr = StringRedactor.createFromJsonString(json);
+  }
+
+  @Test
   public void testUnknownVersion() throws Exception {
     final String fileName = resourcePath + "/unknown-version.json";
     thrown.expect(JsonMappingException.class);
     thrown.expectMessage("Unknown version");
     StringRedactor sr = StringRedactor.createFromJsonFile(fileName);
+  }
+
+  @Test
+  public void testUnknownVersionString() throws Exception {
+    final String json = readFile(resourcePath + "/unknown-version.json");
+    thrown.expect(JsonMappingException.class);
+    thrown.expectMessage("Unknown version");
+    StringRedactor sr = StringRedactor.createFromJsonString(json);
   }
 
   @Test
@@ -90,12 +127,29 @@ public class StringRedactorTest {
   }
 
   @Test
+  public void testAlphaVersionString() throws Exception {
+    final String json = readFile(resourcePath + "/alpha-version.json");
+    thrown.expect(JsonMappingException.class);
+    thrown.expectMessage("string");
+    StringRedactor sr = StringRedactor.createFromJsonString(json);
+  }
+
+  @Test
   public void testNoSearch() throws Exception {
     final String fileName = resourcePath + "/no-search.json";
     thrown.expect(JsonMappingException.class);
     thrown.expectMessage("search");
     thrown.expectMessage("cannot be empty");
     StringRedactor sr = StringRedactor.createFromJsonFile(fileName);
+  }
+
+  @Test
+  public void testNoSearchString() throws Exception {
+    final String json = readFile(resourcePath + "/no-search.json");
+    thrown.expect(JsonMappingException.class);
+    thrown.expectMessage("search");
+    thrown.expectMessage("cannot be empty");
+    StringRedactor sr = StringRedactor.createFromJsonString(json);
   }
 
   @Test
@@ -108,12 +162,30 @@ public class StringRedactorTest {
   }
 
   @Test
+  public void testNoReplaceString() throws Exception {
+    final String json = readFile(resourcePath + "/no-replace.json");
+    thrown.expect(JsonMappingException.class);
+    thrown.expectMessage("replace");
+    thrown.expectMessage("cannot be empty");
+    StringRedactor sr = StringRedactor.createFromJsonString(json);
+  }
+
+  @Test
   public void testNoBrace() throws Exception {
     final String fileName = resourcePath + "/no-brace.json";
     thrown.expect(JsonMappingException.class);
     thrown.expectMessage("Can not instantiate");
     thrown.expectMessage("no single-String constructor/factory");
     StringRedactor sr = StringRedactor.createFromJsonFile(fileName);
+  }
+
+  @Test
+  public void testNoBraceString() throws Exception {
+    final String json = readFile(resourcePath + "/no-brace.json");
+    thrown.expect(JsonMappingException.class);
+    thrown.expectMessage("Can not instantiate");
+    thrown.expectMessage("no single-String constructor/factory");
+    StringRedactor sr = StringRedactor.createFromJsonString(json);
   }
 
   @Test
@@ -125,41 +197,77 @@ public class StringRedactorTest {
   }
 
   @Test
+  public void testBadRegexString() throws Exception {
+    final String json = readFile(resourcePath + "/bad-regex.json");
+    thrown.expect(JsonMappingException.class);
+    thrown.expectMessage("Unclosed character class");
+    StringRedactor sr = StringRedactor.createFromJsonString(json);
+  }
+
+  @Test
   public void testEmptyFile() throws Exception {
     final String fileName = resourcePath + "/empty.json";
     StringRedactor sr = StringRedactor.createFromJsonFile(fileName);
     String result = sr.redact(MESSAGE);
+    Assert.assertEquals(MESSAGE, result);
+    sr = StringRedactor.createFromJsonFile(null);
+    result = sr.redact(MESSAGE);
+    Assert.assertEquals(MESSAGE, result);
+  }
+
+  @Test
+  public void testEmptyString() throws Exception {
+    StringRedactor sr = StringRedactor.createFromJsonString("");
+    String result = sr.redact(MESSAGE);
+    Assert.assertEquals(MESSAGE, result);
+    sr = StringRedactor.createFromJsonString(null);
+    result = sr.redact(MESSAGE);
     Assert.assertEquals(MESSAGE, result);
   }
 
   @Test
   public void testEmptyRules() throws Exception {
     final String fileName = resourcePath + "/empty-rules.json";
-    StringRedactor sr = StringRedactor.createFromJsonFile(fileName);
-    String result = sr.redact(MESSAGE);
+    final String json = readFile(fileName);
+    StringRedactor srf = StringRedactor.createFromJsonFile(fileName);
+    StringRedactor srj = StringRedactor.createFromJsonString(json);
+    String result = srf.redact(MESSAGE);
+    Assert.assertEquals(MESSAGE, result);
+    result = srj.redact(MESSAGE);
     Assert.assertEquals(MESSAGE, result);
   }
 
   @Test
   public void testBasicGood1() throws Exception {
-    String fileName = resourcePath + "/good-1.json";
-    StringRedactor sr = StringRedactor.createFromJsonFile(fileName);
-    String redacted = sr.redact("Hello, world");
+    final String fileName = resourcePath + "/good-1.json";
+    final String json = readFile(fileName);
+    StringRedactor srf = StringRedactor.createFromJsonFile(fileName);
+    StringRedactor srj = StringRedactor.createFromJsonString(json);
+    String redacted = srf.redact("Hello, world");
+    Assert.assertEquals("Hxllx, wxrld", redacted);
+    redacted = srj.redact("Hello, world");
     Assert.assertEquals("Hxllx, wxrld", redacted);
   }
 
   @Test
   public void testExtraAttr() throws Exception {
     final String fileName = resourcePath + "/extra-attr.json";
-    StringRedactor sr = StringRedactor.createFromJsonFile(fileName);
-    String redacted = sr.redact("Hello, world");
+    final String json = readFile(fileName);
+    StringRedactor srf = StringRedactor.createFromJsonFile(fileName);
+    StringRedactor srj = StringRedactor.createFromJsonString(json);
+    String redacted = srf.redact("Hello, world");
+    Assert.assertEquals("Hxllx, wxrld", redacted);
+    redacted = srj.redact("Hello, world");
     Assert.assertEquals("Hxllx, wxrld", redacted);
   }
 
   @Test
   public void testRealRules() throws Exception {
-    String fileName = resourcePath + "/real-1.json";
-    StringRedactor sr = StringRedactor.createFromJsonFile(fileName);
+    final String fileName = resourcePath + "/real-1.json";
+    final String json = readFile(fileName);
+    StringRedactor srf = StringRedactor.createFromJsonFile(fileName);
+    StringRedactor srj = StringRedactor.createFromJsonString(json);
+
     List<String[]> tests = new ArrayList<String[]>();
     // tests are a list of {"input", "expected"} pairs.
     tests.add(new String[]{"Hello, world", "Hello, world"});
@@ -182,16 +290,22 @@ public class StringRedactorTest {
 
     String redacted;
     for (String[] test : tests) {
-      redacted = sr.redact(test[0]);
-      Assert.assertEquals("Failed redacting: " + test[0], test[1], redacted);
+      redacted = srf.redact(test[0]);
+      Assert.assertEquals("Failed (f) redacting: " + test[0], test[1], redacted);
+      redacted = srj.redact(test[0]);
+      Assert.assertEquals("Failed (s) redacting: " + test[0], test[1], redacted);
     }
   }
 
   @Test
   public void testHugeRules() throws Exception {
-    String fileName = resourcePath + "/huge-1.json";
-    StringRedactor sr = StringRedactor.createFromJsonFile(fileName);
-    String redacted = sr.redact(MESSAGE);
+    final String fileName = resourcePath + "/huge-1.json";
+    final String json = readFile(fileName);
+    StringRedactor srf = StringRedactor.createFromJsonFile(fileName);
+    StringRedactor srj = StringRedactor.createFromJsonString(json);
+    String redacted = srf.redact(MESSAGE);
+    Assert.assertEquals("This string is not redadted", redacted);
+    redacted = srj.redact(MESSAGE);
     Assert.assertEquals("This string is not redadted", redacted);
   }
 
