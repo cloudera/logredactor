@@ -18,14 +18,12 @@
 package com.cloudera.log4j.redactor;
 
 import com.fasterxml.jackson.core.JsonParseException;
-import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -42,12 +40,20 @@ public class StringRedactor {
    * The thread-local Matcher and replacement for one rule.
    */
   private static class MatcherReplacement {
-    Matcher matcher;
-    String replacement;
+    private Matcher matcher;
+    private String replacement;
+    private boolean caseSensitive;
 
     public MatcherReplacement(RedactionRule rr) {
-      matcher = rr.pattern.matcher("");
-      replacement = rr.replace;
+      Pattern pattern;
+      if (rr.getCaseSensitive()) {
+        pattern = Pattern.compile(rr.getSearch());
+      } else {
+        pattern = Pattern.compile(rr.getSearch(), Pattern.CASE_INSENSITIVE);
+      }
+      matcher = pattern.matcher("");
+      replacement = rr.getReplace();
+      caseSensitive = rr.getCaseSensitive();
     }
   }
 
@@ -83,13 +89,21 @@ public class StringRedactor {
    */
   private static class RedactionRule {
     private String description;
+    private boolean caseSensitive = true;
     private String trigger;
     private String search;
     private String replace;
-    private Pattern pattern;
 
     public void setDescription(String description) {
       this.description = description;
+    }
+
+    public void setCaseSensitive(boolean caseSensitive) {
+      this.caseSensitive = caseSensitive;
+    }
+
+    public boolean getCaseSensitive() {
+      return caseSensitive;
     }
 
     public String getTrigger() {
@@ -106,7 +120,8 @@ public class StringRedactor {
 
     public void setSearch(String search) {
       this.search = search;
-      this.pattern = Pattern.compile(search);
+      // We create a Pattern here to ensure it's a valid regex.
+      Pattern thrownAway = Pattern.compile(search);
     }
 
     public String getReplace() {
@@ -249,10 +264,25 @@ public class StringRedactor {
     return sr;
   }
 
-  private boolean hasTrigger(String trigger, String msg) {
+  private boolean hasTrigger(String trigger, String msg, boolean caseSensitive) {
     //TODO use Boyer-More to make it more efficient
     //TODO http://www.cs.utexas.edu/users/moore/publications/fstrpos.pdf
-    return msg.contains(trigger);
+    if (caseSensitive) {
+      return msg.contains(trigger);
+    }
+
+    // As there is no case-insensitive contains(), our options are to
+    // tolower() the strings (creates and throws away objects), use a regex
+    // (slow) or write our own using regionMatches(). We take the latter
+    // option, as it's fast.
+    final int len = trigger.length();
+    final int max = msg.length() - len;
+    for (int i = 0; i <= max; i++) {
+      if (msg.regionMatches(true, i, trigger, 0, len)) {
+        return true;
+      }
+    }
+    return false;
   }
 
   /**
@@ -269,7 +299,7 @@ public class StringRedactor {
             : mrTL.get().entrySet()) {
       String key = entry.getKey();
       for (MatcherReplacement mr : entry.getValue()) {
-        if (hasTrigger(key, msg)) {
+        if (hasTrigger(key, msg, mr.caseSensitive)) {
           mr.matcher.reset(msg);
           if (mr.matcher.find()) {
             msg = mr.matcher.replaceAll(mr.replacement);

@@ -364,6 +364,28 @@ public class StringRedactorTest {
     verifyOK(srj, tests);
   }
 
+  @Test
+  public void testCaseSensitivity() throws Exception {
+    final String fileName = resourcePath + "/case-1.json";
+    final String json = readFile(fileName);
+    StringRedactor srf = StringRedactor.createFromJsonFile(fileName);
+    StringRedactor srj = StringRedactor.createFromJsonString(json);
+
+    List<String[]> tests = new ArrayList<String[]>();
+    // tests are a list of {"input", "expected"} pairs.
+    tests.add(new String[]{"Hello, world", "Hello, world"});
+    tests.add(new String[]{"Say aAa! aaa! AAAAAA!", "Say bbb! bbb! bbbbbb!"});
+    tests.add(new String[]{"I like dddogs. dDd", "I like dddogs. dDd"});
+    tests.add(new String[]{"Cccats. Dddogs", "Cccats. eEeogs"});
+    tests.add(new String[]{"Trigger fff gGg", "Trigger fff gGg"});
+    tests.add(new String[]{"Trigger fFf Ggg", "Trigger fFf Ggg"});
+    tests.add(new String[]{"Trigger fFf gGg", "Trigger fFf hHh"});
+
+    verifyOK(srf, tests);
+    verifyOK(srj, tests);
+
+  }
+
   private int multithreadedErrors;
 
   @Test
