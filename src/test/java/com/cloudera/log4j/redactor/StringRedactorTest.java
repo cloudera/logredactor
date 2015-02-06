@@ -42,6 +42,20 @@ public class StringRedactorTest {
     return stringBuilder.toString();
   }
 
+  /**
+   * Run the given tests against the given StringRedactor.
+   * @param sr Target StringRedactor
+   * @param tests List of {"input", "expected result after redaction"} pairs.
+   * @throws Exception
+   */
+  private void verifyOK(StringRedactor sr, List<String[]> tests) throws Exception {
+    String redacted;
+    for (String[] test : tests) {
+      redacted = sr.redact(test[0]);
+      Assert.assertEquals("Failed (f) redacting: " + test[0], test[1], redacted);
+    }
+  }
+
   @Before
   public void setUp() throws Exception {
     URL resourceUrl = getClass().getResource("/good-1.json");
@@ -295,13 +309,8 @@ public class StringRedactorTest {
     tests.add(new String[]{"Multi 1234-2345-3456-4567\nLine 123-45-6789",
             "Multi XXXX-XXXX-XXXX-XXXX\nLine XXX-XX-XXXX"});
 
-    String redacted;
-    for (String[] test : tests) {
-      redacted = srf.redact(test[0]);
-      Assert.assertEquals("Failed (f) redacting: " + test[0], test[1], redacted);
-      redacted = srj.redact(test[0]);
-      Assert.assertEquals("Failed (s) redacting: " + test[0], test[1], redacted);
-    }
+    verifyOK(srf, tests);
+    verifyOK(srj, tests);
   }
 
   @Test
@@ -333,13 +342,26 @@ public class StringRedactorTest {
     tests.add(new String[]{"Ping 192.168.0.1", "Ping 0.192.1.168"});
     tests.add(new String[]{"Magic word", "word: Magic word, word"});
 
-    String redacted;
-    for (String[] test : tests) {
-      redacted = srf.redact(test[0]);
-      Assert.assertEquals("Failed (f) redacting: " + test[0], test[1], redacted);
-      redacted = srj.redact(test[0]);
-      Assert.assertEquals("Failed (s) redacting: " + test[0], test[1], redacted);
-    }
+    verifyOK(srf, tests);
+    verifyOK(srj, tests);
+  }
+
+  @Test
+  public void testOrdering() throws Exception {
+    final String fileName = resourcePath + "/ordering-1.json";
+    final String json = readFile(fileName);
+    StringRedactor srf = StringRedactor.createFromJsonFile(fileName);
+    StringRedactor srj = StringRedactor.createFromJsonString(json);
+
+    List<String[]> tests = new ArrayList<String[]>();
+    // tests are a list of {"input", "expected"} pairs.
+    tests.add(new String[]{"Hello, world", "Hello, world"});
+    tests.add(new String[]{"one", "four"});
+    tests.add(new String[]{"This one is a nice one", "This four is a nice four"});
+    tests.add(new String[]{"Please help me: ten", "Please help me: thirteen"});
+
+    verifyOK(srf, tests);
+    verifyOK(srj, tests);
   }
 
   private int multithreadedErrors;

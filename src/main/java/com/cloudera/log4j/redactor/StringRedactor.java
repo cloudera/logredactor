@@ -26,6 +26,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
@@ -58,7 +59,7 @@ public class StringRedactor {
             @Override
             protected Map<String, List<MatcherReplacement>> initialValue() {
               Map<String, List<MatcherReplacement>> matcherMap
-                      = new HashMap<String, List<MatcherReplacement>>();
+                      = new LinkedHashMap<String, List<MatcherReplacement>>();
               for (Map.Entry<String, List<RedactionRule>> entry
                       : ruleMap.entrySet()) {
                 List<MatcherReplacement> list = new ArrayList<MatcherReplacement>();
@@ -73,7 +74,7 @@ public class StringRedactor {
 
   // Map of {trigger -> RedactionRule}
   private Map<String, List<RedactionRule>> ruleMap
-          = new HashMap<String, List<RedactionRule>>();
+          = new LinkedHashMap<String, List<RedactionRule>>();
 
   /**
    * This class is created by the JSON ObjectMapper in createFromJsonFile().
