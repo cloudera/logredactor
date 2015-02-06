@@ -309,6 +309,32 @@ public class StringRedactorTest {
     Assert.assertEquals("This string is not redadted", redacted);
   }
 
+  @Test
+  public void testBackRefs() throws Exception {
+    final String fileName = resourcePath + "/replace-1.json";
+    final String json = readFile(fileName);
+    StringRedactor srf = StringRedactor.createFromJsonFile(fileName);
+    StringRedactor srj = StringRedactor.createFromJsonString(json);
+
+    List<String[]> tests = new ArrayList<String[]>();
+    // tests are a list of {"input", "expected"} pairs.
+    tests.add(new String[]{"Hello, world", "Hello, world"});
+    tests.add(new String[]{"1234-2345-3456-4576", "XXXX-XXXX-XXXX-4576"});
+    tests.add(new String[]{"Words www.gmail.com is cool", "Words HOSTNAME.REDACTED.com is cool"});
+    tests.add(new String[]{"short.org", "HOSTNAME.REDACTED.org"});
+    tests.add(new String[]{"long.n4me.h-1.co.fr", "HOSTNAME.REDACTED.fr"});
+    tests.add(new String[]{"Ping 192.168.0.1", "Ping 0.192.1.168"});
+    tests.add(new String[]{"Magic word", "word: Magic word, word"});
+
+    String redacted;
+    for (String[] test : tests) {
+      redacted = srf.redact(test[0]);
+      Assert.assertEquals("Failed (f) redacting: " + test[0], test[1], redacted);
+      redacted = srj.redact(test[0]);
+      Assert.assertEquals("Failed (s) redacting: " + test[0], test[1], redacted);
+    }
+  }
+
   private int multithreadedErrors;
 
   @Test
