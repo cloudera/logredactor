@@ -205,6 +205,25 @@ public class StringRedactorTest {
   }
 
   @Test
+  public void testExtraAttr() throws Exception {
+    final String fileName = resourcePath + "/extra-attr.json";
+    thrown.expect(JsonMappingException.class);
+    thrown.expectMessage("Unrecognized field");
+    thrown.expectMessage("extra");
+    StringRedactor srf = StringRedactor.createFromJsonFile(fileName);
+  }
+
+  @Test
+  public void testExtraAttrString() throws Exception {
+    final String fileName = resourcePath + "/extra-attr.json";
+    final String json = readFile(fileName);
+    thrown.expect(JsonMappingException.class);
+    thrown.expectMessage("Unrecognized field");
+    thrown.expectMessage("extra");
+    StringRedactor srj = StringRedactor.createFromJsonString(json);
+  }
+
+  @Test
   public void testEmptyFile() throws Exception {
     final String fileName = resourcePath + "/empty.json";
     StringRedactor sr = StringRedactor.createFromJsonFile(fileName);
@@ -240,18 +259,6 @@ public class StringRedactorTest {
   @Test
   public void testBasicGood1() throws Exception {
     final String fileName = resourcePath + "/good-1.json";
-    final String json = readFile(fileName);
-    StringRedactor srf = StringRedactor.createFromJsonFile(fileName);
-    StringRedactor srj = StringRedactor.createFromJsonString(json);
-    String redacted = srf.redact("Hello, world");
-    Assert.assertEquals("Hxllx, wxrld", redacted);
-    redacted = srj.redact("Hello, world");
-    Assert.assertEquals("Hxllx, wxrld", redacted);
-  }
-
-  @Test
-  public void testExtraAttr() throws Exception {
-    final String fileName = resourcePath + "/extra-attr.json";
     final String json = readFile(fileName);
     StringRedactor srf = StringRedactor.createFromJsonFile(fileName);
     StringRedactor srj = StringRedactor.createFromJsonString(json);

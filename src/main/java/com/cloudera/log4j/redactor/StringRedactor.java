@@ -221,8 +221,6 @@ public class StringRedactor {
     }
 
     ObjectMapper mapper = new ObjectMapper();
-    // Allow for forward compatibility (and be generous with accepting input)
-    mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
     RedactionPolicy policy = mapper.readValue(file, RedactionPolicy.class);
     policy.validate();
     sr.populateRuleMap(policy);
@@ -244,8 +242,6 @@ public class StringRedactor {
     }
 
     ObjectMapper mapper = new ObjectMapper();
-    // Allow for forward compatibility (and be generous with accepting input)
-    mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
     RedactionPolicy policy = mapper.readValue(json, RedactionPolicy.class);
     policy.validate();
     sr.populateRuleMap(policy);
