@@ -44,10 +44,6 @@
     <url>http://www.cloudera.com</url>
   </organization>
 
-  <properties>
-    <jackson.version>2.5.0</jackson.version>
-  </properties>
-
   <repositories>
     <repository>
       <id>cdh.repo</id>
@@ -82,21 +78,27 @@
       <scope>compile</scope>
     </dependency>
     <dependency>
-      <groupId>com.fasterxml.jackson.core</groupId>
-      <artifactId>jackson-core</artifactId>
-      <version>${jackson.version}</version>
+      <groupId>org.codehaus.jackson</groupId>
+      <artifactId>jackson-jaxrs</artifactId>
+      <version>${cdh.jackson.version}</version>
       <scope>compile</scope>
     </dependency>
     <dependency>
-      <groupId>com.fasterxml.jackson.core</groupId>
-      <artifactId>jackson-annotations</artifactId>
-      <version>${jackson.version}</version>
+      <groupId>org.codehaus.jackson</groupId>
+      <artifactId>jackson-core-asl</artifactId>
+      <version>${cdh.jackson.version}</version>
       <scope>compile</scope>
     </dependency>
     <dependency>
-      <groupId>com.fasterxml.jackson.core</groupId>
-      <artifactId>jackson-databind</artifactId>
-      <version>${jackson.version}</version>
+      <groupId>org.codehaus.jackson</groupId>
+      <artifactId>jackson-mapper-asl</artifactId>
+      <version>${cdh.jackson.version}</version>
+      <scope>compile</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.codehaus.jackson</groupId>
+      <artifactId>jackson-xc</artifactId>
+      <version>${cdh.jackson.version}</version>
       <scope>compile</scope>
     </dependency>
     <dependency>

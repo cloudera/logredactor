@@ -1,7 +1,7 @@
 package com.cloudera.log4j.redactor;
 
-import com.fasterxml.jackson.core.JsonParseException;
-import com.fasterxml.jackson.databind.JsonMappingException;
+import org.codehaus.jackson.JsonParseException;
+import org.codehaus.jackson.map.JsonMappingException;
 import junit.framework.Assert;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.Before;
@@ -188,8 +188,7 @@ public class StringRedactorTest {
   public void testNoBrace() throws Exception {
     final String fileName = resourcePath + "/no-brace.json";
     thrown.expect(JsonMappingException.class);
-    thrown.expectMessage("Can not instantiate");
-    thrown.expectMessage("no single-String constructor/factory");
+    thrown.expectMessage("Can not construct instance");
     StringRedactor sr = StringRedactor.createFromJsonFile(fileName);
   }
 
@@ -197,8 +196,7 @@ public class StringRedactorTest {
   public void testNoBraceString() throws Exception {
     final String json = readFile(resourcePath + "/no-brace.json");
     thrown.expect(JsonMappingException.class);
-    thrown.expectMessage("Can not instantiate");
-    thrown.expectMessage("no single-String constructor/factory");
+    thrown.expectMessage("Can not construct instance");
     StringRedactor sr = StringRedactor.createFromJsonString(json);
   }
 
