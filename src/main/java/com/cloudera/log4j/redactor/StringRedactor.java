@@ -24,9 +24,7 @@ import org.codehaus.jackson.map.ObjectMapper;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -36,56 +34,16 @@ import java.util.regex.Pattern;
  */
 public class StringRedactor {
 
-  /**
-   * The thread-local Matcher and replacement for one rule.
-   */
-  private static class MatcherReplacement {
-    private Matcher matcher;
-    private String replacement;
-    private boolean caseSensitive;
+  private RedactionPolicy policy;
 
-    public MatcherReplacement(RedactionRule rr) {
-      Pattern pattern;
-      if (rr.getCaseSensitive()) {
-        pattern = Pattern.compile(rr.getSearch());
-      } else {
-        pattern = Pattern.compile(rr.getSearch(), Pattern.CASE_INSENSITIVE);
-      }
-      matcher = pattern.matcher("");
-      replacement = rr.getReplace();
-      caseSensitive = rr.getCaseSensitive();
-    }
-  }
-
-  // This <code>ThreadLocal</code> keeps and reuses the Java RegEx
-  // <code>Matcher</code>s for all rules, one set per thread because
-  // <code>Matcher</code> is not thread safe.
-  private ThreadLocal<Map<String, List<MatcherReplacement>>> mrTL =
-          new ThreadLocal<Map<String, List<MatcherReplacement>>>() {
-            @Override
-            protected Map<String, List<MatcherReplacement>> initialValue() {
-              Map<String, List<MatcherReplacement>> matcherMap
-                      = new LinkedHashMap<String, List<MatcherReplacement>>();
-              for (Map.Entry<String, List<RedactionRule>> entry
-                      : ruleMap.entrySet()) {
-                List<MatcherReplacement> list = new ArrayList<MatcherReplacement>();
-                matcherMap.put(entry.getKey(), list);
-                for (RedactionRule rr : entry.getValue()) {
-                  list.add(new MatcherReplacement(rr));
-                }
-              }
-              return matcherMap;
-            }
-          };
-
-  // Map of {trigger -> RedactionRule}
-  private Map<String, List<RedactionRule>> ruleMap
-          = new LinkedHashMap<String, List<RedactionRule>>();
+  // Prevent use of normal constructor
+  private StringRedactor() {}
 
   /**
    * This class is created by the JSON ObjectMapper in createFromJsonFile().
    * It holds one rule for redaction - a description and then
    * trigger-search-replace. See the comments in createFromJsonFile().
+   * Since we only read from JSON files, we only need setter methods.
    */
   private static class RedactionRule {
     private String description;
@@ -93,6 +51,8 @@ public class StringRedactor {
     private String trigger;
     private String search;
     private String replace;
+    private Pattern pattern;
+    private ThreadLocal<Matcher> matcherTL;
 
     public void setDescription(String description) {
       this.description = description;
@@ -102,37 +62,23 @@ public class StringRedactor {
       this.caseSensitive = caseSensitive;
     }
 
-    public boolean getCaseSensitive() {
-      return caseSensitive;
-    }
-
-    public String getTrigger() {
-      return trigger;
-    }
-
     public void setTrigger(String trigger) {
       this.trigger = trigger;
     }
 
-    public String getSearch() {
-      return search;
-    }
-
     public void setSearch(String search) {
       this.search = search;
-      // We create a Pattern here to ensure it's a valid regex.
+      // We create a Pattern here to ensure it's a valid regex. We don't
+      // set this.pattern because we don't know yet if it's case
+      // sensitive or not. That's done in postProcess().
       Pattern thrownAway = Pattern.compile(search);
-    }
-
-    public String getReplace() {
-      return replace;
     }
 
     public void setReplace(String replace) {
       this.replace = replace;
     }
 
-    private void validate() throws JsonMappingException {
+    private void postProcess() throws JsonMappingException {
       if ((search == null) || search.isEmpty()) {
         throw new JsonMappingException("The search regular expression cannot " +
                 "be empty.");
@@ -142,6 +88,45 @@ public class StringRedactor {
                 "be empty.");
       }
 
+      if (caseSensitive) {
+        pattern = Pattern.compile(search);
+      } else {
+        pattern = Pattern.compile(search, Pattern.CASE_INSENSITIVE);
+      }
+      matcherTL = new ThreadLocal<Matcher>() {
+        @Override
+        protected Matcher initialValue() {
+          return pattern.matcher("");
+        }
+      };
+    }
+
+    private boolean matchesTrigger(String msg) {
+      // The common case: an empty trigger.
+      if ((trigger == null) || trigger.isEmpty()) {
+        return true;
+      }
+
+      /* TODO Consider Boyer-More for performance.
+       * http://www.cs.utexas.edu/users/moore/publications/fstrpos.pdf
+       * However, it might not matter much in our use case.
+       */
+      if (caseSensitive) {
+        return msg.contains(trigger);
+      }
+
+      // As there is no case-insensitive contains(), our options are to
+      // tolower() the strings (creates and throws away objects), use a regex
+      // (slow) or write our own using regionMatches(). We take the latter
+      // option, as it's fast.
+      final int len = trigger.length();
+      final int max = msg.length() - len;
+      for (int i = 0; i <= max; i++) {
+        if (msg.regionMatches(true, i, trigger, 0, len)) {
+          return true;
+        }
+      }
+      return false;
     }
   }
 
@@ -153,16 +138,15 @@ public class StringRedactor {
     private int version = -1;
     private List<RedactionRule> rules;
 
-    public int getVersion() {
-      return version;
+    private static RedactionPolicy emptyRedactionPolicy() {
+      RedactionPolicy policy = new RedactionPolicy();
+      policy.version = 1;
+      policy.rules = new ArrayList<RedactionRule>();
+      return policy;
     }
 
     public void setVersion(int version) {
       this.version = version;
-    }
-
-    public List<RedactionRule> getRules() {
-      return rules;
     }
 
     public void setRules(List<RedactionRule> rules) {
@@ -170,35 +154,41 @@ public class StringRedactor {
     }
 
     /**
-     * Perform validation checking on the fully constructed JSON.
+     * Perform validation checking on the fully constructed JSON, and
+     * sets up internal data structures.
      * @throws JsonMappingException
      */
-    private void validate() throws JsonMappingException {
+    private void postProcess() throws JsonMappingException {
       if (version == -1) {
         throw new JsonMappingException("No version specified.");
       } else if (version != 1) {
         throw new JsonMappingException("Unknown version " + version);
       }
       for (RedactionRule rule : rules) {
-        rule.validate();
+        rule.postProcess();
       }
     }
-  }
 
-  /**
-   * Given a RedactionPolicy created by the ObjectMapper, take the rules
-   * it contains and organize them into the ruleMap
-   * @param policy RedactionPolicy created by the ObjectMapper
-   */
-  private void populateRuleMap(RedactionPolicy policy) {
-    for (RedactionRule rule : policy.getRules()) {
-      String trigger = (rule.getTrigger() != null) ? rule.getTrigger() : "";
-      List<RedactionRule> list = ruleMap.get(trigger);
-      if (list == null) {
-        list = new ArrayList<RedactionRule>();
-        ruleMap.put(trigger, list);
+    /**
+     * The actual work of redaction.
+     * @param msg The string to redact
+     * @return If any redaction was performed, the redacted string. Otherwise
+     *         the original is returned.
+     */
+    private String redact(String msg) {
+      String original = msg;
+      boolean matched = false;
+      for (RedactionRule rule : rules) {
+        if (rule.matchesTrigger(msg)) {
+          Matcher m = rule.matcherTL.get();
+          m.reset(msg);
+          if (m.find()) {
+            msg = m.replaceAll(rule.replace);
+            matched = true;
+          }
+        }
       }
-      list.add(rule);
+      return matched ? msg : original;
     }
   }
 
@@ -228,18 +218,20 @@ public class StringRedactor {
           throws IOException {
     StringRedactor sr = new StringRedactor();
     if (fileName == null) {
+      sr.policy = RedactionPolicy.emptyRedactionPolicy();
       return sr;
     }
     File file = new File(fileName);
     // An empty file is explicitly allowed as "no rules"
     if (file.exists() && file.length() == 0) {
+      sr.policy = RedactionPolicy.emptyRedactionPolicy();
       return sr;
     }
 
     ObjectMapper mapper = new ObjectMapper();
     RedactionPolicy policy = mapper.readValue(file, RedactionPolicy.class);
-    policy.validate();
-    sr.populateRuleMap(policy);
+    policy.postProcess();
+    sr.policy = policy;
     return sr;
   }
 
@@ -254,35 +246,15 @@ public class StringRedactor {
           throws IOException {
     StringRedactor sr = new StringRedactor();
     if ((json == null) || json.isEmpty()) {
-        return sr;
+      sr.policy = RedactionPolicy.emptyRedactionPolicy();
+      return sr;
     }
 
     ObjectMapper mapper = new ObjectMapper();
     RedactionPolicy policy = mapper.readValue(json, RedactionPolicy.class);
-    policy.validate();
-    sr.populateRuleMap(policy);
+    policy.postProcess();
+    sr.policy = policy;
     return sr;
-  }
-
-  private boolean hasTrigger(String trigger, String msg, boolean caseSensitive) {
-    //TODO use Boyer-More to make it more efficient
-    //TODO http://www.cs.utexas.edu/users/moore/publications/fstrpos.pdf
-    if (caseSensitive) {
-      return msg.contains(trigger);
-    }
-
-    // As there is no case-insensitive contains(), our options are to
-    // tolower() the strings (creates and throws away objects), use a regex
-    // (slow) or write our own using regionMatches(). We take the latter
-    // option, as it's fast.
-    final int len = trigger.length();
-    final int max = msg.length() - len;
-    for (int i = 0; i <= max; i++) {
-      if (msg.regionMatches(true, i, trigger, 0, len)) {
-        return true;
-      }
-    }
-    return false;
   }
 
   /**
@@ -293,21 +265,6 @@ public class StringRedactor {
    * @return The (potentially) redacted message.
    */
   public String redact(String msg) {
-    String original = msg;
-    boolean matched = false;
-    for (Map.Entry<String, List<MatcherReplacement>> entry
-            : mrTL.get().entrySet()) {
-      String key = entry.getKey();
-      for (MatcherReplacement mr : entry.getValue()) {
-        if (hasTrigger(key, msg, mr.caseSensitive)) {
-          mr.matcher.reset(msg);
-          if (mr.matcher.find()) {
-            msg = mr.matcher.replaceAll(mr.replacement);
-            matched = true;
-          }
-        }
-      }
-    }
-    return matched ? msg : original;
+    return policy.redact(msg);
   }
 }

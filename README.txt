@@ -38,6 +38,7 @@ JSON format. The file looks like
     {
       "description": "This is the second rule",
       "trigger": "triggerstring 2",
+      "caseSensitive": "false",
       "search": "regex 2",
       "replace": "replace 2"
     }
@@ -52,6 +53,10 @@ a simple string compare is much faster than a regular expression. The
 trigger is optional. If it does not exist, the message will always have
 "search" applied.
 
+"caseSensitive" is a boolean indicating if the trigger and search are
+to be used in case sensitive or case insensitive matching. It is optional
+and defaults to true (case sensitive matching).
+
 The "search" field is a regular expression, and is required. Make sure that
 proper escaping is used.
 
@@ -60,6 +65,10 @@ it usually looks something like "XXXXXXX".
 
 The "description" field is optional and is intended for self-documentation
 purposes.
+
+The ordering of the rules is significant. The rules are evaluated strictly
+in the order given. Thus, in theory later rules might be influenced by
+earlier rules.
 
 Working example of a simple log4j.properties:
 

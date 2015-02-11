@@ -33,6 +33,48 @@
       "trigger": "me",
       "search": "twelve",
       "replace": "thirteen"
+    },
+    {
+      "description": "Malicious interleaving 1",
+      "caseSensitive": "true",
+      "trigger": "",
+      "search": "abc",
+      "replace": "def"
+    },
+    {
+      "description": "Malicious interleaving 2",
+      "caseSensitive": "true",
+      "trigger": "HappY",
+      "search": "def",
+      "replace": "ghi"
+    },
+    {
+      "description": "Malicious interleaving 3",
+      "caseSensitive": "true",
+      "trigger": "",
+      "search": "ghi",
+      "replace": "jkl"
+    },
+    {
+      "description": "Malicious interleaving 4",
+      "caseSensitive": "false",
+      "trigger": "HappY",
+      "search": "JkL",
+      "replace": "mno"
+    },
+    {
+      "description": "Malicious interleaving 5",
+      "caseSensitive": "true",
+      "trigger": "",
+      "search": "mno",
+      "replace": "pqr"
+    },
+    {
+      "description": "Malicious interleaving 6",
+      "caseSensitive": "true",
+      "trigger": "HappY",
+      "search": "pqr",
+      "replace": "stu"
     }
   ]
 }

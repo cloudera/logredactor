@@ -357,6 +357,7 @@ public class StringRedactorTest {
     tests.add(new String[]{"one", "four"});
     tests.add(new String[]{"This one is a nice one", "This four is a nice four"});
     tests.add(new String[]{"Please help me: ten", "Please help me: thirteen"});
+    tests.add(new String[]{"HappY abc", "HappY stu"});
 
     verifyOK(srf, tests);
     verifyOK(srj, tests);
