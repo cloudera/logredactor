@@ -1,4 +1,3 @@
-// Copyright (c) 2015 Cloudera, Inc. All rights reserved.
 package com.cloudera.log4j.redactor;
 
 import org.codehaus.jackson.JsonParseException;
