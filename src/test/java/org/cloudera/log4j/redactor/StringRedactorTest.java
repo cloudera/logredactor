@@ -1,4 +1,4 @@
-package com.cloudera.log4j.redactor;
+package org.cloudera.log4j.redactor;
 
 import org.codehaus.jackson.JsonParseException;
 import org.codehaus.jackson.map.JsonMappingException;

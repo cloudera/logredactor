@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.cloudera.log4j.redactor;
+package org.cloudera.log4j.redactor;
 
 import org.apache.log4j.Appender;
 import org.apache.log4j.LogManager;
@@ -35,9 +35,9 @@ import java.util.Enumeration;
  * The <code>RedactorAppender</code> configuration is as follows:
  * <p/>
  * <pre>
- * log4j.appender.redactor=com.cloudera.log4j.redactor.RedactorAppender
+ * log4j.appender.redactor=org.cloudera.log4j.redactor.RedactorAppender
  * log4j.appender.redactor.appenderRefs=[APPENDERS]
- * log4j.appender.redactor.policy=com.cloudera.log4j.redactor.RedactorPolicy
+ * log4j.appender.redactor.policy=org.cloudera.log4j.redactor.RedactorPolicy
  * log4j.appender.redactor.policy.rules=/full/path/to/rule/file.json
  * </pre>
  * <p/>

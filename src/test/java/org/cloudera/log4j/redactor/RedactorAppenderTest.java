@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.cloudera.log4j.redactor;
+package org.cloudera.log4j.redactor;
 
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
@@ -67,7 +67,7 @@ public class RedactorAppenderTest {
     capturedOut = new PrintStream(filterOut);
     System.setErr(capturedOut);
 
-    final String pkg = "com.cloudera.log4j.redactor.";
+    final String pkg = "org.cloudera.log4j.redactor.";
     defaults.setProperty(PRE + "LOG", "org.apache.log4j.ConsoleAppender");
     defaults.setProperty(PRE + "LOG.Target", "System.err");
     defaults.setProperty(PRE + "LOG.layout", "org.apache.log4j.PatternLayout");

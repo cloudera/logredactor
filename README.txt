@@ -10,9 +10,9 @@ Install the Log Redactor JAR file in the classpath.
 For each logger whose content you wish to redact, add the following to the
 log4j.properties file:
 
- log4j.appender.redactor=com.cloudera.log4j.redactor.RedactorAppender
+ log4j.appender.redactor=org.cloudera.log4j.redactor.RedactorAppender
  log4j.appender.redactor.appenderRefs=[APPENDERS]
- log4j.appender.redactor.policy=com.cloudera.log4j.redactor.RedactorPolicy
+ log4j.appender.redactor.policy=org.cloudera.log4j.redactor.RedactorPolicy
  log4j.appender.redactor.policy.rules=[RULES FILE]
 
 * "redactor" is an arbitrary name for this particular redaction appender
@@ -79,9 +79,9 @@ log4j.appender.stdout.Target=System.out
 log4j.appender.stdout.layout=org.apache.log4j.PatternLayout
 log4j.appender.stdout.layout.ConversionPattern=%d{ISO8601} %-5p %c{1} - %m%n
 
-log4j.appender.redactor=com.cloudera.log4j.redactor.RedactorAppender
+log4j.appender.redactor=org.cloudera.log4j.redactor.RedactorAppender
 log4j.appender.redactor.appenderRefs=stdout
-log4j.appender.redactor.policy=com.cloudera.log4j.redactor.RedactorPolicy
+log4j.appender.redactor.policy=org.cloudera.log4j.redactor.RedactorPolicy
 log4j.appender.redactor.policy.rules=/full/path/to/rules.json
 
 log4j.rootLogger=stdout, redactor
@@ -134,16 +134,16 @@ log4j.appender.RFA.MaxFileSize=200MB
 log4j.appender.RFA.MaxBackupIndex=10
 
 # Redactor for rootLogger
-log4j.appender.rootRedactor=com.cloudera.log4j.redactor.RedactorAppender
+log4j.appender.rootRedactor=org.cloudera.log4j.redactor.RedactorAppender
 log4j.appender.rootRedactor.appenderRefs=CONS
-log4j.appender.rootRedactor.policy=com.cloudera.log4j.redactor.RedactorPolicy
+log4j.appender.rootRedactor.policy=org.cloudera.log4j.redactor.RedactorPolicy
 log4j.appender.rootRedactor.policy.rules=/full/path/to/rules.json
 
-# Redactor for com.cloudera
-log4j.appender.clouderaRedactor=com.cloudera.log4j.redactor.RedactorAppender
+# Redactor for org.cloudera
+log4j.appender.clouderaRedactor=org.cloudera.log4j.redactor.RedactorAppender
 log4j.appender.clouderaRedactor.appenderRefs=RFA
-log4j.appender.clouderaRedactor.policy=com.cloudera.log4j.redactor.RedactorPolicy
+log4j.appender.clouderaRedactor.policy=org.cloudera.log4j.redactor.RedactorPolicy
 log4j.appender.clouderaRedactor.policy.rules=/full/path/to/rules.json
 
 log4j.rootLogger=CONS, rootRedactor
-log4j.logger.com.cloudera=RFA, clouderaRedactor
+log4j.logger.org.cloudera=RFA, clouderaRedactor
