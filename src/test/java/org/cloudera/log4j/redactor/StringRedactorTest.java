@@ -295,6 +295,18 @@ public class StringRedactorTest {
   }
 
   @Test
+  public void testIntVersion() throws Exception {
+    final String fileName = resourcePath + "/verint.json";
+    final String json = readFile(fileName);
+    StringRedactor srf = StringRedactor.createFromJsonFile(fileName);
+    StringRedactor srj = StringRedactor.createFromJsonString(json);
+    String redacted = srf.redact("Hello, world");
+    Assert.assertEquals("Hxllx, wxrld", redacted);
+    redacted = srj.redact("Hello, world");
+    Assert.assertEquals("Hxllx, wxrld", redacted);
+  }
+
+  @Test
   public void testRealRules() throws Exception {
     final String fileName = resourcePath + "/real-1.json";
     final String json = readFile(fileName);
