@@ -1,0 +1,11 @@
+{
+  "version": "1",
+  "rules": [
+    {
+      "description": "Testing case insensitivity, with a non-string boolean",
+      "caseSensitive": false,
+      "search": "[aeiou]",
+      "replace": "x"
+    }
+  ]
+}

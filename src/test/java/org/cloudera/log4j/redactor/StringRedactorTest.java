@@ -408,7 +408,22 @@ public class StringRedactorTest {
 
     verifyOK(srf, tests);
     verifyOK(srj, tests);
+  }
 
+  @Test
+  public void testCaseSensitivityBool() throws Exception {
+    final String fileName = resourcePath + "/case-bool.json";
+    final String json = readFile(fileName);
+    StringRedactor srf = StringRedactor.createFromJsonFile(fileName);
+    StringRedactor srj = StringRedactor.createFromJsonString(json);
+
+    List<String[]> tests = new ArrayList<String[]>();
+    // tests are a list of {"input", "expected"} pairs.
+    tests.add(new String[]{"Hello, world", "Hxllx, wxrld"});
+    tests.add(new String[]{"CAPS AS WELL", "CxPS xS WxLL"});
+
+    verifyOK(srf, tests);
+    verifyOK(srj, tests);
   }
 
   private int multithreadedErrors;
