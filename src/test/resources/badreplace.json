@@ -1,0 +1,10 @@
+{
+  "version": 1,
+  "rules": [
+    {
+      "description": "Illegal group reference $%",
+      "search": "[aeiou]",
+      "replace": "!@#$%^&*()_+"
+    }
+  ]
+}

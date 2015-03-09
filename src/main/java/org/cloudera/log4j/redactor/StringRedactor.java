@@ -78,11 +78,11 @@ public class StringRedactor {
     private void postProcess() throws JsonMappingException {
       if ((search == null) || search.isEmpty()) {
         throw new JsonMappingException("The search regular expression cannot " +
-                "be empty.");
+            "be empty.");
       }
       if ((replace == null || replace.isEmpty())) {
         throw new JsonMappingException("The replacement text cannot " +
-                "be empty.");
+            "be empty.");
       }
 
       if (caseSensitive) {
@@ -96,6 +96,19 @@ public class StringRedactor {
           return pattern.matcher("");
         }
       };
+
+      // Actually try a sample search-replace with the search and replace.
+      // We know the search is valid from the above, but the replace could
+      // be malformed - for example $% is an illegal group reference.
+      try {
+        String sampleString = "Hello, world";
+        Matcher m = pattern.matcher(sampleString);
+        sampleString = m.replaceAll(replace);
+      } catch (Exception e) {
+        throw new JsonMappingException("The replacement text \"" + replace +
+            "\" is invalid", e);
+
+      }
     }
 
     private boolean matchesTrigger(String msg) {
@@ -173,6 +186,9 @@ public class StringRedactor {
      *         the original is returned.
      */
     private String redact(String msg) {
+      if (msg == null) {
+        return null;
+      }
       String original = msg;
       boolean matched = false;
       for (RedactionRule rule : rules) {

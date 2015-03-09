@@ -283,6 +283,24 @@ public class StringRedactorTest {
   }
 
   @Test
+  public void testBadReplace() throws Exception {
+    final String fileName = resourcePath + "/badreplace.json";
+    thrown.expect(JsonMappingException.class);
+    thrown.expectMessage("replacement");
+    thrown.expectMessage("invalid");
+    StringRedactor srf = StringRedactor.createFromJsonFile(fileName);
+  }
+
+  @Test
+  public void testBadReplaceString() throws Exception {
+    final String json = readFile(resourcePath + "/badreplace.json");
+    thrown.expect(JsonMappingException.class);
+    thrown.expectMessage("replacement");
+    thrown.expectMessage("invalid");
+    StringRedactor srj = StringRedactor.createFromJsonString(json);
+  }
+
+  @Test
   public void testBasicGood1() throws Exception {
     final String fileName = resourcePath + "/good-1.json";
     final String json = readFile(fileName);
@@ -292,6 +310,10 @@ public class StringRedactorTest {
     Assert.assertEquals("Hxllx, wxrld", redacted);
     redacted = srj.redact("Hello, world");
     Assert.assertEquals("Hxllx, wxrld", redacted);
+
+    // While we're here, check that a null in gets a null out.
+    Assert.assertEquals(null, srf.redact(null));
+    Assert.assertEquals(null, srj.redact(null));
   }
 
   @Test
