@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "rules": [
+    {
+      "description": "Credit Card numbers (with separator)",
+      "search": "\\d{4}[^\\w]\\d{4}[^\\w]\\d{4}[^\\w]\\d{4}",
+      "caseSensitive": true,
+      "replace": "XXXX-XXXX-XXXX-XXXX"
+    },
+    {
+      "description": "Social Security numbers (with separator)",
+      "search": "\\d{3}[^\\w]\\d{2}[^\\w]\\d{4}",
+      "caseSensitive": true,
+      "replace": "XXX-XX-XXXX"
+    }
+  ]
+}

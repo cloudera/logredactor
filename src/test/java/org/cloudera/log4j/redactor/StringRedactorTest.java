@@ -448,6 +448,31 @@ public class StringRedactorTest {
     verifyOK(srj, tests);
   }
 
+  @Test
+  public void testBetterCCNSSN() throws Exception {
+    final String fileName = resourcePath + "/betternumbers.json";
+    final String json = readFile(fileName);
+    StringRedactor srf = StringRedactor.createFromJsonFile(fileName);
+    StringRedactor srj = StringRedactor.createFromJsonString(json);
+
+    List<String[]> tests = new ArrayList<String[]>();
+    // tests are a list of {"input", "expected"} pairs.
+    tests.add(new String[]{"container_1425421474415_0003_01_000002",
+        "container_1425421474415_0003_01_000002"});
+    tests.add(new String[]{"1234-1234-1234-1234", "XXXX-XXXX-XXXX-XXXX"});
+    tests.add(new String[]{"1234_1234_1234_1234", "1234_1234_1234_1234"});
+    tests.add(new String[]{"1234*1234!1234@1234", "XXXX-XXXX-XXXX-XXXX"});
+    tests.add(new String[]{"1234b1234b1234b1234", "1234b1234b1234b1234"});
+    tests.add(new String[]{"123-12-1234", "XXX-XX-XXXX"});
+    tests.add(new String[]{"123!12!1234", "XXX-XX-XXXX"});
+    tests.add(new String[]{"123_12_1234", "123_12_1234"});
+    tests.add(new String[]{"words123-12-1234words2345-2345-2345-1234words",
+        "wordsXXX-XX-XXXXwordsXXXX-XXXX-XXXX-XXXXwords"});
+
+    verifyOK(srf, tests);
+    verifyOK(srj, tests);
+  }
+
   private int multithreadedErrors;
 
   @Test
