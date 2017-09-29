@@ -147,3 +147,27 @@ log4j.appender.clouderaRedactor.policy.rules=/full/path/to/rules.json
 
 log4j.rootLogger=CONS, rootRedactor
 log4j.logger.org.cloudera=RFA, clouderaRedactor
+
+LOG4J2 SUPPORT:
+
+Log redaction is supported in log4j2 via the
+org.cloudera.log4j2.redactor.RedactorPolicy class (note the "log4j2" in the
+class name, which differentiates it from the log4j version). This class is an
+implementation of RewritePolicy and is meant to be used with the built-in
+RewriteAppender class in log4j2. Simply instantiate a RewriteAppender, specify
+the RedactorPolicy with the correct rules file, and specify in the
+RewriteAppender the appenders that should receive the redacted log messages.
+
+An example, which redacts messages and passes them on to the console and a
+rolling file appender, is provided below:
+
+appender.redactorForRootLogger.name=redactorForRootLogger
+appender.redactorForRootLogger.type=Rewrite
+appender.redactorForRootLogger.appenderRef-console.type=AppenderRef
+appender.redactorForRootLogger.appenderRef-console.ref=console
+appender.redactorForRootLogger.appenderRef-console.level=ERROR
+appender.redactorForRootLogger.appenderRef-DRFA.type=AppenderRef
+appender.redactorForRootLogger.appenderRef-DRFA.ref=DRFA
+appender.redactorForRootLogger.rewritePolicy.name=redactorForRootLoggerPolicy
+appender.redactorForRootLogger.rewritePolicy.type=RedactorPolicy
+appender.redactorForRootLogger.rewritePolicy.rules=/full/path/to/rules.json
