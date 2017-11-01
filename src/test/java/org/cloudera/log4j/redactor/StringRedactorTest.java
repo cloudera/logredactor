@@ -16,7 +16,7 @@ package org.cloudera.log4j.redactor;
 
 import org.codehaus.jackson.JsonParseException;
 import org.codehaus.jackson.map.JsonMappingException;
-import junit.framework.Assert;
+import org.junit.Assert;
 import org.apache.commons.text.RandomStringGenerator;
 import org.junit.Before;
 import org.junit.Rule;
