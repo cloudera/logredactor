@@ -59,7 +59,6 @@ public class RedactorPolicy implements RewritePolicy {
    * @param source LoggingEvent to examine
    * @return Either the original (no changes) or a redacted copy.
    */
-  @Override
   public LogEvent rewrite(LogEvent source) {
     String original = source.getMessage().getFormattedMessage();
     String redacted = redactor.redact(original);

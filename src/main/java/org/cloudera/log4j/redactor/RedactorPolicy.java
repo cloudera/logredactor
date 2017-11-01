@@ -47,7 +47,6 @@ public class RedactorPolicy implements RewritePolicy, OptionHandler {
    * a file containing rules in JSON format.  This implements the
    * OptionHandler interface.
    */
-  @Override
   public void activateOptions() {
     try {
       redactor = StringRedactor.createFromJsonFile(rules);
@@ -63,7 +62,6 @@ public class RedactorPolicy implements RewritePolicy, OptionHandler {
    * @param source LoggingEvent to examine
    * @return Either the original (no changes) or a redacted copy.
    */
-  @Override
   public LoggingEvent rewrite(LoggingEvent source) {
     String original = source.getMessage().toString();
     String redacted = redactor.redact(original);

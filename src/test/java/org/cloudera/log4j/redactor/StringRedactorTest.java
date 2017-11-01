@@ -486,7 +486,6 @@ public class StringRedactorTest {
     Thread[] threads = new Thread[50];
     for (int i = 0; i < threads.length; i++) {
       threads[i] = new Thread(new Runnable() {
-        @Override
         public void run() {
           Pattern numberRegex = Pattern.compile("[0-9]");
           Matcher numberMatcher = numberRegex.matcher("");
