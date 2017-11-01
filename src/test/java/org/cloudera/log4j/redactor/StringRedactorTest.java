@@ -17,7 +17,7 @@ package org.cloudera.log4j.redactor;
 import org.codehaus.jackson.JsonParseException;
 import org.codehaus.jackson.map.JsonMappingException;
 import junit.framework.Assert;
-import org.apache.commons.lang3.RandomStringUtils;
+import org.apache.commons.text.RandomStringGenerator;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -481,6 +481,8 @@ public class StringRedactorTest {
     final StringRedactor sr = StringRedactor.createFromJsonFile(fileName);
     String redacted = sr.redact("asdf1234fdas666 H3ll0 w0rld");
     Assert.assertEquals("asdf####fdas### H#ll# w#rld", redacted);
+    final RandomStringGenerator generator = new RandomStringGenerator.Builder()
+        .withinRange(' ', 'z').build();
 
     multithreadedErrors = 0;
     Thread[] threads = new Thread[50];
@@ -490,7 +492,7 @@ public class StringRedactorTest {
           Pattern numberRegex = Pattern.compile("[0-9]");
           Matcher numberMatcher = numberRegex.matcher("");
           for (int j = 0; j < 500; j++) {
-            String original = RandomStringUtils.random(2048);
+            String original = generator.generate(2048);
             String redacted = sr.redact(original);
             numberMatcher.reset(redacted);
             boolean found = numberMatcher.find();
