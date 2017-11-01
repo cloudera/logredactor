@@ -202,7 +202,7 @@ public class StringRedactorTest {
   public void testNoBrace() throws Exception {
     final String fileName = resourcePath + "/no-brace.json";
     thrown.expect(JsonMappingException.class);
-    thrown.expectMessage("Can not construct instance");
+    thrown.expectMessage("Can not instantiate value of type");
     StringRedactor sr = StringRedactor.createFromJsonFile(fileName);
   }
 
@@ -210,7 +210,7 @@ public class StringRedactorTest {
   public void testNoBraceString() throws Exception {
     final String json = readFile(resourcePath + "/no-brace.json");
     thrown.expect(JsonMappingException.class);
-    thrown.expectMessage("Can not construct instance");
+    thrown.expectMessage("Can not instantiate value of type");
     StringRedactor sr = StringRedactor.createFromJsonString(json);
   }
 
