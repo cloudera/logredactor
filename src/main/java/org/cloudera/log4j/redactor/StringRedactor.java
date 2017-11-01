@@ -14,9 +14,7 @@
  */
 package org.cloudera.log4j.redactor;
 
-import org.codehaus.jackson.JsonParseException;
-import org.codehaus.jackson.map.JsonMappingException;
-import org.codehaus.jackson.map.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.io.File;
 import java.io.IOException;
@@ -75,13 +73,13 @@ public class StringRedactor {
       this.replace = replace;
     }
 
-    private void postProcess() throws JsonMappingException {
+    private void postProcess() throws IOException {
       if ((search == null) || search.isEmpty()) {
-        throw new JsonMappingException("The search regular expression cannot " +
+        throw new IOException("The search regular expression cannot " +
             "be empty.");
       }
       if ((replace == null || replace.isEmpty())) {
-        throw new JsonMappingException("The replacement text cannot " +
+        throw new IOException("The replacement text cannot " +
             "be empty.");
       }
 
@@ -105,7 +103,7 @@ public class StringRedactor {
         Matcher m = pattern.matcher(sampleString);
         sampleString = m.replaceAll(replace);
       } catch (Exception e) {
-        throw new JsonMappingException("The replacement text \"" + replace +
+        throw new IOException("The replacement text \"" + replace +
             "\" is invalid", e);
 
       }
@@ -166,13 +164,13 @@ public class StringRedactor {
     /**
      * Perform validation checking on the fully constructed JSON, and
      * sets up internal data structures.
-     * @throws JsonMappingException
+     * @throws IOException
      */
-    private void postProcess() throws JsonMappingException {
+    private void postProcess() throws IOException {
       if (version == -1) {
-        throw new JsonMappingException("No version specified.");
+        throw new IOException("No version specified.");
       } else if (version != 1) {
-        throw new JsonMappingException("Unknown version " + version);
+        throw new IOException("Unknown version " + version);
       }
       for (RedactionRule rule : rules) {
         rule.postProcess();
@@ -225,7 +223,7 @@ public class StringRedactor {
    * }
    * @param fileName The name of the file to read
    * @return A freshly allocated StringRedactor
-   * @throws JsonParseException, JsonMappingException, IOException
+   * @throws IOException
    */
   public static StringRedactor createFromJsonFile(String fileName)
           throws IOException {
@@ -253,7 +251,7 @@ public class StringRedactor {
    * The format is identical to that described in createFromJsonFile().
    * @param json String containing json formatted rules.
    * @return A freshly allocated StringRedactor
-   * @throws JsonParseException, JsonMappingException, IOException
+   * @throws IOException
    */
   public static StringRedactor createFromJsonString(String json)
           throws IOException {
