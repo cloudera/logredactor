@@ -36,10 +36,20 @@
     <url>http://www.cloudera.com</url>
   </organization>
 
+  <properties>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <maven.compiler.source>1.8</maven.compiler.source>
+    <maven.compiler.target>1.8</maven.compiler.target>
+    <http-repo-internal>http://maven.jenkins.cloudera.com:8081/artifactory</http-repo-internal>
+    <http-repo-external>https://repository.cloudera.com/content</http-repo-external>
+    <repository.releases>${http-repo-internal}/cdh-staging-local</repository.releases>
+    <repository.snapshots>${http-repo-internal}/cdh-snapshot-local</repository.snapshots>
+  </properties>
+
   <repositories>
     <repository>
-      <id>cdh.repo</id>
-      <url>https://repository.cloudera.com/content/groups/cloudera-repos</url>
+      <id>cdh.releases.repo</id>
+      <url>${http-repo-external}/groups/cloudera-repos</url>
       <name>Cloudera Repositories</name>
       <snapshots>
         <enabled>false</enabled>
@@ -47,7 +57,7 @@
     </repository>
     <repository>
       <id>cdh.snapshots.repo</id>
-      <url>https://repository.cloudera.com/content/repositories/snapshots</url>
+      <url>${http-repo-external}/repositories/snapshots</url>
       <name>Cloudera Snapshots Repository</name>
       <snapshots>
         <enabled>true</enabled>
@@ -58,11 +68,18 @@
     </repository>
   </repositories>
 
-  <properties>
-    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <maven.compiler.source>1.8</maven.compiler.source>
-    <maven.compiler.target>1.8</maven.compiler.target>
-  </properties>
+  <distributionManagement>
+    <repository>
+      <id>cdh.releases.repo</id>
+      <url>${repository.releases}</url>
+      <name>CDH Releases Repository</name>
+    </repository>
+    <snapshotRepository>
+      <id>cdh.snapshots.repo</id>
+      <url>${repository.snapshots}</url>
+      <name>CDH Snapshots Repository</name>
+    </snapshotRepository>
+  </distributionManagement>
 
   <reporting>
     <plugins>
