@@ -36,6 +36,10 @@
     <url>http://www.cloudera.com</url>
   </organization>
 
+  <scm>
+    <developerConnection>scm:git:git://github.com/cloudera/logredactor.git</developerConnection>
+  </scm>
+
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <maven.compiler.source>1.8</maven.compiler.source>
