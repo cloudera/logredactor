@@ -115,7 +115,7 @@ public class StringRedactorTest {
   @Test
   public void testNoVersion() throws Exception {
     final String fileName = resourcePath + "/no-version.json";
-    thrown.expect(IOException.class);
+    thrown.expect(JsonMappingException.class);
     thrown.expectMessage("No version specified");
     StringRedactor sr = StringRedactor.createFromJsonFile(fileName);
   }
@@ -123,7 +123,7 @@ public class StringRedactorTest {
   @Test
   public void testNoVersionString() throws Exception {
     final String json = readFile(resourcePath + "/no-version.json");
-    thrown.expect(IOException.class);
+    thrown.expect(JsonMappingException.class);
     thrown.expectMessage("No version specified");
     StringRedactor sr = StringRedactor.createFromJsonString(json);
   }
@@ -131,7 +131,7 @@ public class StringRedactorTest {
   @Test
   public void testUnknownVersion() throws Exception {
     final String fileName = resourcePath + "/unknown-version.json";
-    thrown.expect(IOException.class);
+    thrown.expect(JsonMappingException.class);
     thrown.expectMessage("Unknown version");
     StringRedactor sr = StringRedactor.createFromJsonFile(fileName);
   }
@@ -139,7 +139,7 @@ public class StringRedactorTest {
   @Test
   public void testUnknownVersionString() throws Exception {
     final String json = readFile(resourcePath + "/unknown-version.json");
-    thrown.expect(IOException.class);
+    thrown.expect(JsonMappingException.class);
     thrown.expectMessage("Unknown version");
     StringRedactor sr = StringRedactor.createFromJsonString(json);
   }
@@ -164,7 +164,7 @@ public class StringRedactorTest {
   @Test
   public void testNoSearch() throws Exception {
     final String fileName = resourcePath + "/no-search.json";
-    thrown.expect(IOException.class);
+    thrown.expect(JsonMappingException.class);
     thrown.expectMessage("search");
     thrown.expectMessage("cannot be empty");
     StringRedactor sr = StringRedactor.createFromJsonFile(fileName);
@@ -173,7 +173,7 @@ public class StringRedactorTest {
   @Test
   public void testNoSearchString() throws Exception {
     final String json = readFile(resourcePath + "/no-search.json");
-    thrown.expect(IOException.class);
+    thrown.expect(JsonMappingException.class);
     thrown.expectMessage("search");
     thrown.expectMessage("cannot be empty");
     StringRedactor sr = StringRedactor.createFromJsonString(json);
@@ -182,7 +182,7 @@ public class StringRedactorTest {
   @Test
   public void testNoReplace() throws Exception {
     final String fileName = resourcePath + "/no-replace.json";
-    thrown.expect(IOException.class);
+    thrown.expect(JsonMappingException.class);
     thrown.expectMessage("replace");
     thrown.expectMessage("cannot be empty");
     StringRedactor sr = StringRedactor.createFromJsonFile(fileName);
@@ -191,7 +191,7 @@ public class StringRedactorTest {
   @Test
   public void testNoReplaceString() throws Exception {
     final String json = readFile(resourcePath + "/no-replace.json");
-    thrown.expect(IOException.class);
+    thrown.expect(JsonMappingException.class);
     thrown.expectMessage("replace");
     thrown.expectMessage("cannot be empty");
     StringRedactor sr = StringRedactor.createFromJsonString(json);
@@ -284,7 +284,7 @@ public class StringRedactorTest {
   @Test
   public void testBadReplace() throws Exception {
     final String fileName = resourcePath + "/badreplace.json";
-    thrown.expect(IOException.class);
+    thrown.expect(JsonMappingException.class);
     thrown.expectMessage("replacement");
     thrown.expectMessage("invalid");
     StringRedactor srf = StringRedactor.createFromJsonFile(fileName);
@@ -293,7 +293,7 @@ public class StringRedactorTest {
   @Test
   public void testBadReplaceString() throws Exception {
     final String json = readFile(resourcePath + "/badreplace.json");
-    thrown.expect(IOException.class);
+    thrown.expect(JsonMappingException.class);
     thrown.expectMessage("replacement");
     thrown.expectMessage("invalid");
     StringRedactor srj = StringRedactor.createFromJsonString(json);
