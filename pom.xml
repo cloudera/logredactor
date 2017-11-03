@@ -35,7 +35,7 @@
   </organization>
 
   <scm>
-    <developerConnection>scm:git:git://github.com/cloudera/logredactor.git</developerConnection>
+    <developerConnection>scm:git:git@github.com:cloudera/logredactor.git</developerConnection>
     <tag>2.0.0</tag>
   </scm>
 
