@@ -127,6 +127,8 @@
                   <shadedPattern>${privateClassPath}.org.</shadedPattern>
                   <excludes>
                     <exclude>org.cloudera.**</exclude>
+                    <exclude>org.apache.logging.**</exclude>
+                    <exclude>org.apache.log4j.**</exclude>
                   </excludes>
                 </relocation>
               </relocations>
