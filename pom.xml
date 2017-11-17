@@ -48,6 +48,7 @@
     <http-repo-external>https://repository.cloudera.com/content</http-repo-external>
     <repository.releases>${http-repo-internal}/cdh-staging-local</repository.releases>
     <repository.snapshots>${http-repo-internal}/cdh-snapshot-local</repository.snapshots>
+    <privateClassPath>org.cloudera.logredactor.shaded</privateClassPath>
   </properties>
 
   <repositories>
@@ -115,6 +116,21 @@
             <goals>
               <goal>shade</goal>
             </goals>
+            <configuration>
+              <relocations>
+                <relocation>
+                  <pattern>com.</pattern>
+                  <shadedPattern>${privateClassPath}.com.</shadedPattern>
+                </relocation>
+                <relocation>
+                  <pattern>org.</pattern>
+                  <shadedPattern>${privateClassPath}.org.</shadedPattern>
+                  <excludes>
+                    <exclude>org.cloudera.**</exclude>
+                  </excludes>
+                </relocation>
+              </relocations>
+            </configuration>
           </execution>
         </executions>
       </plugin>
