@@ -14,8 +14,6 @@
  */
 package org.cloudera.log4j.redactor;
 
-import com.fasterxml.jackson.core.JsonParseException;
-import com.fasterxml.jackson.databind.JsonMappingException;
 import org.junit.Assert;
 import org.apache.commons.text.RandomStringGenerator;
 import org.junit.Before;
@@ -97,7 +95,7 @@ public class StringRedactorTest {
   @Test
   public void testNotJSON() throws Exception {
     final String fileName = resourcePath + "/non-json.json";
-    thrown.expect(JsonParseException.class);
+    thrown.expect(RedactionPolicyParseException.class);
     thrown.expectMessage("#");
     thrown.expectMessage("Unexpected character");
     StringRedactor sr = StringRedactor.createFromJsonFile(fileName);
@@ -106,7 +104,7 @@ public class StringRedactorTest {
   @Test
   public void testNotJsonString() throws Exception {
     final String json = readFile(resourcePath + "/non-json.json");
-    thrown.expect(JsonParseException.class);
+    thrown.expect(RedactionPolicyParseException.class);
     thrown.expectMessage("#");
     thrown.expectMessage("Unexpected");
     StringRedactor sr = StringRedactor.createFromJsonString(json);
@@ -115,7 +113,7 @@ public class StringRedactorTest {
   @Test
   public void testNoVersion() throws Exception {
     final String fileName = resourcePath + "/no-version.json";
-    thrown.expect(JsonMappingException.class);
+    thrown.expect(RedactionPolicyParseException.class);
     thrown.expectMessage("No version specified");
     StringRedactor sr = StringRedactor.createFromJsonFile(fileName);
   }
@@ -123,7 +121,7 @@ public class StringRedactorTest {
   @Test
   public void testNoVersionString() throws Exception {
     final String json = readFile(resourcePath + "/no-version.json");
-    thrown.expect(JsonMappingException.class);
+    thrown.expect(RedactionPolicyParseException.class);
     thrown.expectMessage("No version specified");
     StringRedactor sr = StringRedactor.createFromJsonString(json);
   }
@@ -131,7 +129,7 @@ public class StringRedactorTest {
   @Test
   public void testUnknownVersion() throws Exception {
     final String fileName = resourcePath + "/unknown-version.json";
-    thrown.expect(JsonMappingException.class);
+    thrown.expect(RedactionPolicyParseException.class);
     thrown.expectMessage("Unknown version");
     StringRedactor sr = StringRedactor.createFromJsonFile(fileName);
   }
@@ -139,7 +137,7 @@ public class StringRedactorTest {
   @Test
   public void testUnknownVersionString() throws Exception {
     final String json = readFile(resourcePath + "/unknown-version.json");
-    thrown.expect(JsonMappingException.class);
+    thrown.expect(RedactionPolicyParseException.class);
     thrown.expectMessage("Unknown version");
     StringRedactor sr = StringRedactor.createFromJsonString(json);
   }
@@ -147,7 +145,7 @@ public class StringRedactorTest {
   @Test
   public void testAlphaVersion() throws Exception {
     final String fileName = resourcePath + "/alpha-version.json";
-    thrown.expect(JsonMappingException.class);
+    thrown.expect(RedactionPolicyParseException.class);
     thrown.expectMessage("string");
     thrown.expectMessage("Cannot deserialize value");
     StringRedactor sr = StringRedactor.createFromJsonFile(fileName);
@@ -156,7 +154,7 @@ public class StringRedactorTest {
   @Test
   public void testAlphaVersionString() throws Exception {
     final String json = readFile(resourcePath + "/alpha-version.json");
-    thrown.expect(JsonMappingException.class);
+    thrown.expect(RedactionPolicyParseException.class);
     thrown.expectMessage("string");
     StringRedactor sr = StringRedactor.createFromJsonString(json);
   }
@@ -164,7 +162,7 @@ public class StringRedactorTest {
   @Test
   public void testNoSearch() throws Exception {
     final String fileName = resourcePath + "/no-search.json";
-    thrown.expect(JsonMappingException.class);
+    thrown.expect(RedactionPolicyParseException.class);
     thrown.expectMessage("search");
     thrown.expectMessage("cannot be empty");
     StringRedactor sr = StringRedactor.createFromJsonFile(fileName);
@@ -173,7 +171,7 @@ public class StringRedactorTest {
   @Test
   public void testNoSearchString() throws Exception {
     final String json = readFile(resourcePath + "/no-search.json");
-    thrown.expect(JsonMappingException.class);
+    thrown.expect(RedactionPolicyParseException.class);
     thrown.expectMessage("search");
     thrown.expectMessage("cannot be empty");
     StringRedactor sr = StringRedactor.createFromJsonString(json);
@@ -182,7 +180,7 @@ public class StringRedactorTest {
   @Test
   public void testNoReplace() throws Exception {
     final String fileName = resourcePath + "/no-replace.json";
-    thrown.expect(JsonMappingException.class);
+    thrown.expect(RedactionPolicyParseException.class);
     thrown.expectMessage("replace");
     thrown.expectMessage("cannot be empty");
     StringRedactor sr = StringRedactor.createFromJsonFile(fileName);
@@ -191,7 +189,7 @@ public class StringRedactorTest {
   @Test
   public void testNoReplaceString() throws Exception {
     final String json = readFile(resourcePath + "/no-replace.json");
-    thrown.expect(JsonMappingException.class);
+    thrown.expect(RedactionPolicyParseException.class);
     thrown.expectMessage("replace");
     thrown.expectMessage("cannot be empty");
     StringRedactor sr = StringRedactor.createFromJsonString(json);
@@ -200,7 +198,7 @@ public class StringRedactorTest {
   @Test
   public void testNoBrace() throws Exception {
     final String fileName = resourcePath + "/no-brace.json";
-    thrown.expect(JsonMappingException.class);
+    thrown.expect(RedactionPolicyParseException.class);
     thrown.expectMessage("Cannot construct instance of");
     StringRedactor sr = StringRedactor.createFromJsonFile(fileName);
   }
@@ -208,7 +206,7 @@ public class StringRedactorTest {
   @Test
   public void testNoBraceString() throws Exception {
     final String json = readFile(resourcePath + "/no-brace.json");
-    thrown.expect(JsonMappingException.class);
+    thrown.expect(RedactionPolicyParseException.class);
     thrown.expectMessage("Cannot construct instance of");
     StringRedactor sr = StringRedactor.createFromJsonString(json);
   }
@@ -216,7 +214,7 @@ public class StringRedactorTest {
   @Test
   public void testBadRegex() throws Exception {
     final String fileName = resourcePath + "/bad-regex.json";
-    thrown.expect(JsonMappingException.class);
+    thrown.expect(RedactionPolicyParseException.class);
     thrown.expectMessage("Unclosed character class");
     StringRedactor sr = StringRedactor.createFromJsonFile(fileName);
   }
@@ -224,7 +222,7 @@ public class StringRedactorTest {
   @Test
   public void testBadRegexString() throws Exception {
     final String json = readFile(resourcePath + "/bad-regex.json");
-    thrown.expect(JsonMappingException.class);
+    thrown.expect(RedactionPolicyParseException.class);
     thrown.expectMessage("Unclosed character class");
     StringRedactor sr = StringRedactor.createFromJsonString(json);
   }
@@ -232,7 +230,7 @@ public class StringRedactorTest {
   @Test
   public void testExtraAttr() throws Exception {
     final String fileName = resourcePath + "/extra-attr.json";
-    thrown.expect(JsonMappingException.class);
+    thrown.expect(RedactionPolicyParseException.class);
     thrown.expectMessage("Unrecognized field");
     thrown.expectMessage("extra");
     StringRedactor srf = StringRedactor.createFromJsonFile(fileName);
@@ -242,7 +240,7 @@ public class StringRedactorTest {
   public void testExtraAttrString() throws Exception {
     final String fileName = resourcePath + "/extra-attr.json";
     final String json = readFile(fileName);
-    thrown.expect(JsonMappingException.class);
+    thrown.expect(RedactionPolicyParseException.class);
     thrown.expectMessage("Unrecognized field");
     thrown.expectMessage("extra");
     StringRedactor srj = StringRedactor.createFromJsonString(json);
@@ -284,7 +282,7 @@ public class StringRedactorTest {
   @Test
   public void testBadReplace() throws Exception {
     final String fileName = resourcePath + "/badreplace.json";
-    thrown.expect(JsonMappingException.class);
+    thrown.expect(RedactionPolicyParseException.class);
     thrown.expectMessage("replacement");
     thrown.expectMessage("invalid");
     StringRedactor srf = StringRedactor.createFromJsonFile(fileName);
@@ -293,7 +291,7 @@ public class StringRedactorTest {
   @Test
   public void testBadReplaceString() throws Exception {
     final String json = readFile(resourcePath + "/badreplace.json");
-    thrown.expect(JsonMappingException.class);
+    thrown.expect(RedactionPolicyParseException.class);
     thrown.expectMessage("replacement");
     thrown.expectMessage("invalid");
     StringRedactor srj = StringRedactor.createFromJsonString(json);

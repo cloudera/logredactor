@@ -14,8 +14,7 @@
  */
 package org.cloudera.log4j.redactor;
 
-import com.fasterxml.jackson.core.JsonParseException;
-import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.io.File;
@@ -75,13 +74,13 @@ public class StringRedactor {
       this.replace = replace;
     }
 
-    private void postProcess() throws JsonMappingException {
+    private void postProcess() throws RedactionPolicyParseException {
       if ((search == null) || search.isEmpty()) {
-        throw new JsonMappingException(null, "The search regular expression " +
+        throw new RedactionPolicyParseException("The search regular expression " +
             "cannot be empty.");
       }
       if ((replace == null || replace.isEmpty())) {
-        throw new JsonMappingException(null, "The replacement text cannot " +
+        throw new RedactionPolicyParseException("The replacement text cannot " +
             "be empty.");
       }
 
@@ -105,8 +104,8 @@ public class StringRedactor {
         Matcher m = pattern.matcher(sampleString);
         sampleString = m.replaceAll(replace);
       } catch (Exception e) {
-        throw new JsonMappingException(null, "The replacement text \"" + replace +
-            "\" is invalid", e);
+        throw new RedactionPolicyParseException("The replacement text \"" +
+            replace + "\" is invalid", e);
 
       }
     }
@@ -166,13 +165,13 @@ public class StringRedactor {
     /**
      * Perform validation checking on the fully constructed JSON, and
      * sets up internal data structures.
-     * @throws JsonMappingException on version and processing issues.
+     * @throws RedactionPolicyParseException on version and processing issues.
      */
-    private void postProcess() throws JsonMappingException {
+    private void postProcess() throws RedactionPolicyParseException {
       if (version == -1) {
-        throw new JsonMappingException(null, "No version specified.");
+        throw new RedactionPolicyParseException("No version specified.");
       } else if (version != 1) {
-        throw new JsonMappingException(null, "Unknown version " + version);
+        throw new RedactionPolicyParseException("Unknown version " + version);
       }
       for (RedactionRule rule : rules) {
         rule.postProcess();
@@ -225,7 +224,9 @@ public class StringRedactor {
    * }
    * @param fileName The name of the file to read
    * @return A freshly allocated StringRedactor
-   * @throws JsonParseException, JsonMappingException, IOException
+   * @throws RedactionPolicyParseException, IOException. We convert jackson
+   *    exceptions to RedactionPolicyParseExceptions because we shade and
+   *    relocate jackson and don't want to expose it.
    */
   public static StringRedactor createFromJsonFile(String fileName)
           throws IOException {
@@ -242,7 +243,12 @@ public class StringRedactor {
     }
 
     ObjectMapper mapper = new ObjectMapper();
-    RedactionPolicy policy = mapper.readValue(file, RedactionPolicy.class);
+    RedactionPolicy policy;
+    try {
+      policy = mapper.readValue(file, RedactionPolicy.class);
+    } catch (JsonProcessingException jpe) {
+      throw new RedactionPolicyParseException(jpe.getMessage(), jpe.getCause());
+    }
     policy.postProcess();
     sr.policy = policy;
     return sr;
@@ -253,7 +259,9 @@ public class StringRedactor {
    * The format is identical to that described in createFromJsonFile().
    * @param json String containing json formatted rules.
    * @return A freshly allocated StringRedactor
-   * @throws JsonParseException, JsonMappingException, IOException
+   * @throws RedactionPolicyParseException, IOException. We convert jackson
+   *    exceptions to RedactionPolicyParseExceptions because we shade and
+   *    relocate jackson and don't want to expose it.
    */
   public static StringRedactor createFromJsonString(String json)
           throws IOException {
@@ -264,7 +272,12 @@ public class StringRedactor {
     }
 
     ObjectMapper mapper = new ObjectMapper();
-    RedactionPolicy policy = mapper.readValue(json, RedactionPolicy.class);
+    RedactionPolicy policy;
+    try {
+      policy = mapper.readValue(json, RedactionPolicy.class);
+    } catch (JsonProcessingException jpe) {
+      throw new RedactionPolicyParseException(jpe.getMessage(), jpe.getCause());
+    }
     policy.postProcess();
     sr.policy = policy;
     return sr;
