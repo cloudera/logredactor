@@ -129,6 +129,8 @@
                     <exclude>org.cloudera.**</exclude>
                     <exclude>org.apache.logging.**</exclude>
                     <exclude>org.apache.log4j.**</exclude>
+                    <!-- org.w3c is statically referenced inside Jackson -->
+                    <exclude>org.w3c.**</exclude>
                   </excludes>
                 </relocation>
               </relocations>
