@@ -125,13 +125,13 @@
                 <relocation>
                   <pattern>org.</pattern>
                   <shadedPattern>${privateClassPath}.org.</shadedPattern>
-                  <excludes>
-                    <exclude>org.cloudera.**</exclude>
-                    <exclude>org.apache.logging.**</exclude>
-                    <exclude>org.apache.log4j.**</exclude>
-                    <!-- org.w3c is statically referenced inside Jackson -->
-                    <exclude>org.w3c.**</exclude>
-                  </excludes>
+                  <!-- Only shade fasterxml.jackson; trying to shade
+                       everything is highly problematic. If other notable
+                       dependencies are added they should be included
+                       here as well. -->
+                  <includes>
+                    <include>com.fasterxml.**</include>
+                  </includes>
                 </relocation>
               </relocations>
             </configuration>
