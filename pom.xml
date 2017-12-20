@@ -118,13 +118,17 @@
             </goals>
             <configuration>
               <relocations>
-                <!-- Only relocate fasterxml.jackson; trying to
-                     relocate everything is highly problematic. If
+                <!-- Only relocate fasterxml.jackson and log4j2; trying
+                     to relocate everything is highly problematic. If
                      other notable dependencies are added they should
                      be included here as well. -->
                 <relocation>
                   <pattern>com.fasterxml</pattern>
                   <shadedPattern>${privateClassPath}.com.fasterxml</shadedPattern>
+                </relocation>
+                <relocation>
+                  <pattern>org.apache.logging.log4j</pattern>
+                  <shadedPattern>${privateClassPath}.org.apache.logging.log4j</shadedPattern>
                 </relocation>
               </relocations>
               <transformers>
