@@ -129,11 +129,6 @@
                 <relocation>
                   <pattern>org.apache.logging.log4j</pattern>
                   <shadedPattern>${privateClassPath}.org.apache.logging.log4j</shadedPattern>
-                  <excludes>
-                    <!-- If we don't exclude this, @Plugin is invisible -->
-                    <exclude>org.apache.logging.log4j.core.config.plugins.*</exclude>
-                    <exclude>org.apache.logging.log4j.core.config.plugins.*.*</exclude>
-                  </excludes>
                 </relocation>
               </relocations>
               <transformers>
