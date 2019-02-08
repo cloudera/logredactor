@@ -22,6 +22,7 @@ import org.apache.logging.log4j.core.config.plugins.Plugin;
 import org.apache.logging.log4j.core.config.plugins.PluginAttribute;
 import org.apache.logging.log4j.core.config.plugins.PluginFactory;
 import org.apache.logging.log4j.core.impl.Log4jLogEvent;
+import org.apache.logging.log4j.message.Message;
 import org.apache.logging.log4j.message.SimpleMessage;
 import org.cloudera.log4j.redactor.StringRedactor;
 
@@ -60,12 +61,19 @@ public class RedactorPolicy implements RewritePolicy {
    * @return Either the original (no changes) or a redacted copy.
    */
   public LogEvent rewrite(LogEvent source) {
-    String original = source.getMessage().getFormattedMessage();
-    String redacted = redactor.redact(original);
-    if (!redacted.equals(original)) {
-      source = new Log4jLogEvent.Builder(source)
-          .setMessage(new SimpleMessage(redacted))
-          .build();
+    if (source != null) {
+      Message msg = source.getMessage();
+      if (msg != null) {
+        String original = msg.getFormattedMessage();
+        if (original != null) {
+          String redacted = redactor.redact(original);
+          if (!redacted.equals(original)) {
+            source = new Log4jLogEvent.Builder(source)
+                .setMessage(new SimpleMessage(redacted))
+                .build();
+          }
+        }
+      }
     }
     return source;
   }

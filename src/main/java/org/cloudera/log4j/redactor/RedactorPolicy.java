@@ -63,15 +63,20 @@ public class RedactorPolicy implements RewritePolicy, OptionHandler {
    * @return Either the original (no changes) or a redacted copy.
    */
   public LoggingEvent rewrite(LoggingEvent source) {
-    String original = source.getMessage().toString();
-    String redacted = redactor.redact(original);
-    if (!redacted.equals(original)) {
-      Throwable throwable = (source.getThrowableInformation() != null)
-                            ? source.getThrowableInformation().getThrowable()
-                            : null;
-      source = new LoggingEvent(source.getFQNOfLoggerClass(),
-          source.getLogger(), source.getTimeStamp(), source.getLevel(), redacted,
-          throwable);
+    if (source != null) {
+      Object msg = source.getMessage();
+      if (msg != null) {
+        String original = msg.toString();
+        String redacted = redactor.redact(original);
+        if (!redacted.equals(original)) {
+          Throwable throwable = (source.getThrowableInformation() != null)
+              ? source.getThrowableInformation().getThrowable()
+              : null;
+          source = new LoggingEvent(source.getFQNOfLoggerClass(),
+              source.getLogger(), source.getTimeStamp(), source.getLevel(), redacted,
+              throwable);
+        }
+      }
     }
     return source;
   }

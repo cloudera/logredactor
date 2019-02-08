@@ -98,6 +98,14 @@ public abstract class BaseRedactorTest {
     log.info("Mail me at myoder@cloudera.com, dude.");
     out = getAndResetLogOutput();
     Assert.assertEquals("Mail me at email@redacted.host, dude.", out);
+
+    // Turns out, a null log message is allowed.
+    log.info(null);
+    out = getAndResetLogOutput();
+    // Complicated because log4j returns "" and log4j2 returns "null"
+    if (!("".equals(out) || "null".equals(out))) {
+      Assert.fail("Output not \"\" or \"null\"");
+    }
   }
 
   private static class FilterOut extends FilterOutputStream {
