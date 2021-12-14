@@ -139,20 +139,20 @@
       <groupId>org.apache.logging.log4j</groupId>
       <artifactId>log4j-api</artifactId>
       <!-- Matches Hive, the primary user of log4j2 -->
-      <version>2.15.0</version>
+      <version>2.16.0</version>
       <scope>compile</scope>
     </dependency>
     <dependency>
       <groupId>org.apache.logging.log4j</groupId>
       <artifactId>log4j-core</artifactId>
       <!-- Matches Hive, the primary user of log4j2 -->
-      <version>2.15.0</version>
+      <version>2.16.0</version>
       <scope>compile</scope>
     </dependency>
     <dependency>
       <groupId>com.fasterxml.jackson.core</groupId>
       <artifactId>jackson-databind</artifactId>
-      <version>2.9.8</version>
+      <version>2.9.10.8</version>
       <scope>compile</scope>
     </dependency>
     <dependency>
