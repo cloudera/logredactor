@@ -134,6 +134,7 @@
       <artifactId>log4j</artifactId>
       <version>1.2.17</version>
       <scope>compile</scope>
+      <optional>true</optional>
     </dependency>
     <dependency>
       <groupId>org.apache.logging.log4j</groupId>
@@ -141,6 +142,7 @@
       <!-- Matches Hive, the primary user of log4j2 -->
       <version>2.17.1</version>
       <scope>compile</scope>
+      <optional>true</optional>
     </dependency>
     <dependency>
       <groupId>org.apache.logging.log4j</groupId>
@@ -148,6 +150,7 @@
       <!-- Matches Hive, the primary user of log4j2 -->
       <version>2.17.1</version>
       <scope>compile</scope>
+      <optional>true</optional>
     </dependency>
     <dependency>
       <groupId>com.fasterxml.jackson.core</groupId>
