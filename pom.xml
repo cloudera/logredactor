@@ -49,6 +49,19 @@
     <repository.releases>${http-repo-internal}/cdh-staging-local</repository.releases>
     <repository.snapshots>${http-repo-internal}/cdh-snapshot-local</repository.snapshots>
     <privateClassPath>org.cloudera.logredactor.shaded</privateClassPath>
+
+    <!-- dependency versions -->
+    <commons-text.version>1.10.0</commons-text.version>
+    <jackson-databind.version>2.15.3</jackson-databind.version>
+    <junit.version>4.13.1</junit.version>
+    <log4j2.version>2.22.1</log4j2.version>
+    <reload4j.version>1.2.25</reload4j.version>
+
+    <!-- plugin versions -->
+    <maven-javadoc-plugin.version>2.10.4</maven-javadoc-plugin.version>
+    <maven-jar-plugin.version>3.0.2</maven-jar-plugin.version>
+    <maven-release-plugin.version>2.5.3</maven-release-plugin.version>
+    <versions-maven-plugin.version>2.5</versions-maven-plugin.version>
   </properties>
 
   <repositories>
@@ -91,7 +104,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-javadoc-plugin</artifactId>
-        <version>2.10.4</version>
+        <version>${maven-javadoc-plugin.version}</version>
       </plugin>
     </plugins>
   </reporting>
@@ -101,14 +114,14 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-jar-plugin</artifactId>
-        <version>3.0.2</version>
+        <version>${maven-jar-plugin.version}</version>
         <configuration>
           <forceCreation>true</forceCreation>
         </configuration>
       </plugin>
       <plugin>
         <artifactId>maven-release-plugin</artifactId>
-        <version>2.5.3</version>
+        <version>${maven-release-plugin.version}</version>
         <configuration>
           <tagNameFormat>@{project.version}</tagNameFormat>
         </configuration>
@@ -116,7 +129,7 @@
       <plugin>
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>versions-maven-plugin</artifactId>
-        <version>2.5</version>
+        <version>${versions-maven-plugin.version}</version>
       </plugin>
     </plugins>
   </build>
@@ -125,41 +138,41 @@
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
-      <version>4.13.1</version>
+      <version>${junit.version}</version>
       <scope>test</scope>
     </dependency>
     <dependency>
       <!-- Obsolete, but we have to support log4j version 1 -->
       <groupId>ch.qos.reload4j</groupId>
       <artifactId>reload4j</artifactId>
-      <version>1.2.25</version>
+      <version>${reload4j.version}</version>
       <scope>compile</scope>
       <optional>true</optional>
     </dependency>
     <dependency>
       <groupId>org.apache.logging.log4j</groupId>
       <artifactId>log4j-api</artifactId>
-      <version>2.22.1</version>
+      <version>${log4j2.version}</version>
       <scope>compile</scope>
       <optional>true</optional>
     </dependency>
     <dependency>
       <groupId>org.apache.logging.log4j</groupId>
       <artifactId>log4j-core</artifactId>
-      <version>2.22.1</version>
+      <version>${log4j2.version}</version>
       <scope>compile</scope>
       <optional>true</optional>
     </dependency>
     <dependency>
       <groupId>com.fasterxml.jackson.core</groupId>
       <artifactId>jackson-databind</artifactId>
-      <version>2.15.3</version>
+      <version>${jackson-databind.version}</version>
       <scope>compile</scope>
     </dependency>
     <dependency>
       <groupId>org.apache.commons</groupId>
       <artifactId>commons-text</artifactId>
-      <version>1.10.0</version>
+      <version>${commons-text.version}</version>
       <scope>test</scope>
     </dependency>
   </dependencies>
