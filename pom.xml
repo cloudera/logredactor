@@ -54,7 +54,7 @@
     <commons-text.version>1.10.0</commons-text.version>
     <jackson-databind.version>2.15.3</jackson-databind.version>
     <junit.version>4.13.1</junit.version>
-    <log4j2.version>2.22.1</log4j2.version>
+    <log4j2.version>2.25.4</log4j2.version>
     <reload4j.version>1.2.25</reload4j.version>
 
     <!-- plugin versions -->
