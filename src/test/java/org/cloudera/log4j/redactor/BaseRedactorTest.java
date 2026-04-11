@@ -75,6 +75,8 @@ public abstract class BaseRedactorTest {
   }
 
   protected void testRedactionRules(LoggerWrapper log) {
+    getAndResetLogOutput();
+
     log.info("WHERE x=123-45-6789");
     String out = getAndResetLogOutput();
     Assert.assertEquals("WHERE x=XXX-XX-XXXX", out);
