@@ -52,7 +52,7 @@
 
     <!-- dependency versions -->
     <commons-text.version>1.10.0</commons-text.version>
-    <jackson-databind.version>2.22.0</jackson-databind.version>
+    <jackson-databind.version>2.21.4</jackson-databind.version>
     <junit.version>4.13.1</junit.version>
     <log4j2.version>2.25.4</log4j2.version>
     <reload4j.version>1.2.25</reload4j.version>
